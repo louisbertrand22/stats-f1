@@ -137,7 +137,7 @@ jobs:
     
     - name: Start services
       run: |
-        docker-compose up -d
+        docker compose up -d
         sleep 30
     
     - name: Wait for services
@@ -152,7 +152,7 @@ jobs:
     
     - name: Stop services
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   # Job 5: Code quality
   code-quality:

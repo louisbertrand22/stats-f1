@@ -182,3 +182,50 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       continue-on-error: true
+  
+    # Job 6: Deploy en production (VPS via SSH)
+  deploy-prod:
+    name: Deploy to PROD (VPS)
+    runs-on: ubuntu-latest
+    needs: [test-backend, build-and-scan, deploy]   # attend le push de l'image
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Copie uniquement les fichiers utiles au serveur
+      - name: Copy compose files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/opt/stats-f1/"
+
+      # Connexion SSH et déploiement
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            mkdir -p /opt/stats-f1
+            cd /opt/stats-f1
+
+            # Login GHCR (token avec scope read:packages)
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Export des variables utilisées par compose
+            export IMAGE_TAG="ghcr.io/${{ github.repository }}:main"
+            export APP_ENV="production"
+
+            # Pull + restart idempotent
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Optionnel: nettoyage
+            docker image prune -f

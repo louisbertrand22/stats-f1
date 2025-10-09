@@ -67,7 +67,7 @@ REDIS_PORT=6379
 
 5. **Lancer l'application**
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 6. **Accéder aux services**
@@ -82,19 +82,19 @@ docker-compose up --build
 ### Docker
 ```bash
 # Démarrer les services
-docker-compose up -d
+docker compose up -d
 
 # Voir les logs
-docker-compose logs -f
+docker compose logs -f
 
 # Arrêter les services
-docker-compose down
+docker compose down
 
 # Rebuild après modification
-docker-compose up --build
+docker compose up --build
 
 # Nettoyer tout (attention : supprime les données)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Tests
@@ -215,19 +215,19 @@ git push origin main
 ### Le backend ne démarre pas
 ```bash
 # Vérifier les logs
-docker-compose logs backend
+docker compose logs backend
 
 # Vérifier que Redis et Postgres sont up
-docker-compose ps
+docker compose ps
 ```
 
 ### Redis connection refused
 ```bash
 # Redémarrer Redis
-docker-compose restart redis
+docker compose restart redis
 
 # Vérifier les logs Redis
-docker-compose logs redis
+docker compose logs redis
 ```
 
 ### L'API ne retourne pas de données

@@ -11,8 +11,7 @@ services:
       POSTGRES_DB: f1db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # Pas d'exposition de port - uniquement accessible depuis le réseau Docker
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U f1user"]
       interval: 10s
@@ -70,7 +69,8 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     networks:
       - f1-network
     restart: unless-stopped

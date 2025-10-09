@@ -3,8 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import redis
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
+
+# Import des données mockées
+from mock_data import (
+    MOCK_DRIVERS,
+    MOCK_CONSTRUCTORS,
+    MOCK_DRIVER_STANDINGS,
+    MOCK_CONSTRUCTOR_STANDINGS,
+    MOCK_SCHEDULE,
+    MOCK_LAST_RACE
+)
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
 
@@ -16,6 +26,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mode de fonctionnement (mock ou real)
+USE_MOCK_DATA = os.getenv("USE_MOCK_DATA", "true").lower() == "true"
 
 # Configuration Redis
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -50,12 +63,15 @@ async def root():
     return {
         "message": "🏎️ F1 Dashboard API",
         "version": "1.0.0",
+        "mode": "MOCK DATA" if USE_MOCK_DATA else "LIVE DATA",
         "endpoints": [
-            "/drivers",
-            "/constructors",
-            "/current/standings",
-            "/current/schedule",
-            "/races/{year}"
+            "/drivers/current",
+            "/constructors/current",
+            "/standings/drivers",
+            "/standings/constructors",
+            "/schedule/current",
+            "/race/last",
+            "/driver/{driver_id}/stats"
         ]
     }
 
@@ -65,12 +81,16 @@ async def health_check():
     return {
         "status": "healthy",
         "redis": "connected" if redis_client else "disconnected",
+        "mode": "mock" if USE_MOCK_DATA else "live",
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/drivers/current")
 async def get_current_drivers():
     """Récupère la liste des pilotes de la saison en cours"""
+    if USE_MOCK_DATA:
+        return MOCK_DRIVERS
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current/drivers.json")
@@ -83,6 +103,9 @@ async def get_current_drivers():
 @app.get("/constructors/current")
 async def get_current_constructors():
     """Récupère la liste des écuries de la saison en cours"""
+    if USE_MOCK_DATA:
+        return MOCK_CONSTRUCTORS
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current/constructors.json")
@@ -95,6 +118,9 @@ async def get_current_constructors():
 @app.get("/standings/drivers")
 async def get_driver_standings():
     """Récupère le classement actuel des pilotes"""
+    if USE_MOCK_DATA:
+        return MOCK_DRIVER_STANDINGS
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current/driverStandings.json")
@@ -108,6 +134,9 @@ async def get_driver_standings():
 @app.get("/standings/constructors")
 async def get_constructor_standings():
     """Récupère le classement actuel des écuries"""
+    if USE_MOCK_DATA:
+        return MOCK_CONSTRUCTOR_STANDINGS
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current/constructorStandings.json")
@@ -121,6 +150,9 @@ async def get_constructor_standings():
 @app.get("/schedule/current")
 async def get_current_schedule():
     """Récupère le calendrier de la saison en cours"""
+    if USE_MOCK_DATA:
+        return MOCK_SCHEDULE
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current.json")
@@ -133,6 +165,9 @@ async def get_current_schedule():
 @app.get("/race/last")
 async def get_last_race_results():
     """Récupère les résultats de la dernière course"""
+    if USE_MOCK_DATA:
+        return MOCK_LAST_RACE
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{ERGAST_BASE_URL}/current/last/results.json")
@@ -146,6 +181,16 @@ async def get_last_race_results():
 @app.get("/driver/{driver_id}/stats")
 async def get_driver_stats(driver_id: str):
     """Récupère les statistiques d'un pilote"""
+    if USE_MOCK_DATA:
+        # Données mockées pour quelques pilotes
+        mock_stats = {
+            "verstappen": {"driver_id": "verstappen", "total_wins": 53, "total_podiums": 98, "total_races": 175},
+            "hamilton": {"driver_id": "hamilton", "total_wins": 103, "total_podiums": 197, "total_races": 335},
+            "leclerc": {"driver_id": "leclerc", "total_wins": 5, "total_podiums": 30, "total_races": 120},
+            "sainz": {"driver_id": "sainz", "total_wins": 3, "total_podiums": 20, "total_races": 185},
+        }
+        return mock_stats.get(driver_id, {"driver_id": driver_id, "total_wins": 0, "total_podiums": 0, "total_races": 0})
+    
     async def fetch():
         async with httpx.AsyncClient() as client:
             # Récupère toutes les victoires du pilote

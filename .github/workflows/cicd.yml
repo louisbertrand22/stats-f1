@@ -155,6 +155,7 @@ jobs:
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: VITE_API_URL=https://stats-f1-production.up.railway.app
 
       # ---------- NOTIF ----------
       - name: Deploy notification

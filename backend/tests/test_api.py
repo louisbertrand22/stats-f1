@@ -44,7 +44,7 @@ def test_get_current_drivers():
     assert "driverId" in data[0]
     assert "givenName" in data[0]
     assert "familyName" in data[0]
-    assert data[0]["driverId"] == "verstappen"
+    assert data[0]["driverId"] == "piastri"
 
 def test_get_current_constructors():
     """Test de récupération des constructeurs actuels"""
@@ -67,7 +67,7 @@ def test_get_driver_standings():
     assert "points" in data[0]
     assert "Driver" in data[0]
     assert data[0]["position"] == "1"
-    assert data[0]["Driver"]["familyName"] == "Verstappen"
+    assert data[0]["Driver"]["familyName"] == "Piastri"
 
 def test_get_constructor_standings():
     """Test du classement des constructeurs"""
@@ -79,7 +79,7 @@ def test_get_constructor_standings():
     assert "position" in data[0]
     assert "points" in data[0]
     assert "Constructor" in data[0]
-    assert data[0]["Constructor"]["name"] == "Red Bull Racing"
+    assert data[0]["Constructor"]["name"] == "McLaren"
 
 def test_get_schedule():
     """Test du calendrier"""
@@ -91,7 +91,7 @@ def test_get_schedule():
     assert "raceName" in data[0]
     assert "date" in data[0]
     assert "Circuit" in data[0]
-    assert data[0]["raceName"] == "Bahrain Grand Prix"
+    assert data[0]["raceName"] == "Australian Grand Prix"
 
 def test_get_last_race():
     """Test de la dernière course"""

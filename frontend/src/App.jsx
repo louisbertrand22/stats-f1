@@ -39,9 +39,6 @@ function App() {
         ? sRaw
         : (sRaw?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings ?? []);
       const d = Array.isArray(dRaw) ? dRaw : toArray(dRaw);
-      console.log('API_URL:', API_URL);
-      console.log('standings raw type:', typeof sRaw, sRaw);
-      console.log('drivers raw type:', typeof dRaw, dRaw);
       setStandings(standingsRes.data || [])
       setDrivers(driversRes.data || [])
     } catch (err) {

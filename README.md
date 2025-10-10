@@ -1,271 +1,271 @@
-# 🏎️ F1 Dashboard - Projet DevOps
+# 🏎️ F1 Dashboard — Projet DevOps
 
-Un projet complet pour apprendre le DevOps en travaillant avec les données de la Formule 1.
+Application **full-stack** qui affiche des statistiques F1 (pilotes, classements, calendrier) via un backend Python et un frontend React. Le projet sert de fil rouge DevOps : conteneurisation, CI/CD, scans de sécurité et déploiement automatisé.
 
-## 🎯 Objectifs pédagogiques
+---
 
-- **Conteneurisation** : Docker et Docker Compose
-- **CI/CD** : GitHub Actions avec tests automatisés
-- **APIs REST** : FastAPI avec documentation Swagger
-- **Cache** : Redis pour optimiser les performances
-- **Base de données** : PostgreSQL
-- **Tests** : pytest avec couverture de code
-- **Monitoring** : Health checks et métriques
+## 1) 🧭 Description du projet
 
-## 🏗️ Architecture
+- **Frontend** : React + Vite, buildé en fichiers statiques et servi par **Nginx**.
+- **Backend** : **FastAPI** (Python) exposant des endpoints REST (health, drivers, standings…).
+- **Données** : alimentées par l’API publique **Ergast F1**.
+- **Cache (optionnel)** : **Redis** pour éviter de solliciter l’API externe à chaque requête.
+- **CI/CD** : GitHub Actions (tests, lint, build images, scan Trivy, push vers GHCR, déploiement).
+- **Prod** : images Docker poussées sur **GitHub Container Registry (GHCR)** et services déployés sur **Railway**.
+
+### Schéma (simplifié)
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Frontend  │────▶│   Backend   │────▶│  Ergast API │
-│   (React)   │     │  (FastAPI)  │     │     (F1)    │
-└─────────────┘     └─────────────┘     └─────────────┘
-                           │
-                    ┌──────┴──────┐
-                    ▼              ▼
-              ┌──────────┐   ┌──────────┐
-              │  Redis   │   │ Postgres │
-              │  (Cache) │   │   (DB)   │
-              └──────────┘   └──────────┘
+Frontend (React+Nginx)  -->  Backend (FastAPI)  -->  Ergast F1 API
+                               │
+                               └─► Redis (cache, optionnel)
 ```
 
-## 🚀 Démarrage rapide
+---
 
-### Prérequis
+## 2) 📚 Description de l’API (Backend)
 
-- Docker Desktop installé
-- Git
-- Un compte GitHub
+Base URL (prod) : `https://<TON_BACKEND>.up.railway.app`
 
-### Installation
+| Méthode | Endpoint                         | Description                                 |
+|--------:|----------------------------------|---------------------------------------------|
+| GET     | `/`                              | Page racine (ping)                          |
+| GET     | `/health`                        | Health check                                |
+| GET     | `/drivers/current`               | Liste des pilotes de la saison en cours     |
+| GET     | `/constructors/current`          | Liste des écuries de la saison              |
+| GET     | `/standings/drivers`             | Classement pilotes                          |
+| GET     | `/standings/constructors`        | Classement constructeurs                    |
+| GET     | `/schedule/current`              | Calendrier de la saison                     |
+| GET     | `/race/last`                     | Résultat de la dernière course              |
+| GET     | `/driver/{driver_id}/stats`      | Stats détaillées d’un pilote                |
 
-1. **Cloner le projet**
+Exemples :
 ```bash
-git clone <votre-repo>
-cd f1-dashboard
+curl https://<TON_BACKEND>.up.railway.app/health
+curl https://<TON_BACKEND>.up.railway.app/drivers/current
+curl https://<TON_BACKEND>.up.railway.app/standings/drivers
 ```
 
-2. **Créer la structure des dossiers**
-```bash
-mkdir -p backend/app backend/tests frontend/src nginx .github/workflows
-```
+> La doc interactive **Swagger** est disponible si activée : `https://<TON_BACKEND>/docs`.
 
-3. **Copier les fichiers de configuration**
-   - Copiez tous les fichiers que je vous ai fournis dans les bons dossiers
-   - `main.py` et `requirements.txt` dans `backend/`
-   - `Dockerfile` pour le backend dans `backend/`
-   - `docker-compose.yml` à la racine
-   - `ci-cd.yml` dans `.github/workflows/`
-   - `test_api.py` dans `backend/tests/`
+---
 
-4. **Créer le fichier .env** (optionnel)
-```bash
-# backend/.env
-DATABASE_URL=postgresql://f1user:f1password@postgres:5432/f1db
-REDIS_HOST=redis
-REDIS_PORT=6379
-```
+## 3) ▶️ Lancer le projet (local & prod)
 
-5. **Lancer l'application**
+### A) Lancer **en local** avec Docker Compose
+
+Prérequis : Docker (Desktop/Engine) + Compose
+
 ```bash
+# 1) cloner
+git clone <URL_DU_REPO>
+cd stats-f1
+
+# 2) (optionnel) backend/.env
+# REDIS_HOST=redis
+# REDIS_PORT=6379
+
+# 3) lancer (build + run)
 docker compose up --build
 ```
 
-6. **Accéder aux services**
-   - 🌐 Frontend : http://localhost:3000
-   - 🔧 Backend API : http://localhost:8000
-   - 📚 Documentation API : http://localhost:8000/docs
-   - 🗄️ PostgreSQL : localhost:5432
-   - 💾 Redis : localhost:6379
+Accès :
+- Frontend : http://localhost:3000  
+- Backend :  http://localhost:8000  
+- Docs API : http://localhost:8000/docs  
+- Redis :    localhost:6379 (si activé)
 
-## 📋 Commandes utiles
+> Le front **n’utilise pas de proxy `/api`** : il appelle directement l’URL du backend via la variable **`VITE_API_URL`** (voir section déploiement/CI). En local, le compose la définit vers `http://backend:8000` ou `http://localhost:8000` selon ton setup.
 
-### Docker
+### B) Lancer **backend seul** (dev)
 ```bash
-# Démarrer les services
-docker compose up -d
-
-# Voir les logs
-docker compose logs -f
-
-# Arrêter les services
-docker compose down
-
-# Rebuild après modification
-docker compose up --build
-
-# Nettoyer tout (attention : supprime les données)
-docker compose down -v
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Tests
+### C) Lancer **frontend seul** (dev)
 ```bash
-# Tests backend
+cd frontend
+npm install
+# expose VITE_API_URL pour la dev (ex : backend local)
+VITE_API_URL=http://localhost:8000 npm run dev
+```
+
+---
+
+## 4) 🧰 Technologies utilisées
+
+- **Backend** : Python 3.11, **FastAPI**, Uvicorn
+- **Frontend** : **React** + **Vite**, Nginx
+- **Cache** (optionnel) : Redis
+- **Conteneurs** : Docker, multi-stage builds
+- **Orchestration locale** : Docker Compose
+- **CI/CD** : GitHub Actions (tests, lint, build, scan sécurité, push GHCR, déploiement)
+- **Sécurité** : **Trivy** (scan de vulnérabilités images)
+- **Registry** : **GHCR** (ghcr.io)
+- **Hébergement** : **Railway** (frontend & backend)
+
+---
+
+## 5) 🔁 Processus Docker / Build / Déploiement
+
+### A) Images Docker
+
+- **Backend** : `backend/Dockerfile`  
+  - Expose `8000`  
+  - Lance l’app FastAPI (Uvicorn/Gunicorn)
+
+- **Frontend** : `frontend/Dockerfile`  
+  - Étape 1 : build Vite  
+  - Étape 2 : Nginx statique (pas de proxy)  
+  - Expose `80`
+
+### B) Pipeline GitHub Actions (extrait)
+
+1. **Tests & Lint backend**
+   - `pytest`, `flake8`, service Redis (pour tests si besoin)
+
+2. **Build images (local pour scan)**
+   - `docker/build-push-action@v6` (backend) avec `load: true` pour scanner
+   - **Trivy** : `aquasecurity/trivy-action` → rapport SARIF
+
+3. **Push vers GHCR**
+   - Login : `docker/login-action` sur `ghcr.io`
+   - Tags générés par `docker/metadata-action`
+   - Push **backend** : `ghcr.io/<owner>/<repo>:<tag>`
+   - Push **frontend** : `ghcr.io/<owner>/<repo>-frontend:<tag>`
+
+4. **Déploiement (Railway)**
+   - Services Railway configurés pour **tirer l’image GHCR**
+   - Backend : Internal Port **8000**
+   - Frontend : Internal Port **80**
+   - **Pas de `/api`** : le front appelle l’API via `VITE_API_URL` **baked at build time**
+
+### C) Spécificité Front **sans `/api`**
+
+Le frontend ne proxifie pas. Il lit l’URL d’API à **build-time** :
+
+- **Dockerfile (frontend)** :
+  ```dockerfile
+  ARG VITE_API_URL
+  ENV VITE_API_URL=${VITE_API_URL}
+  RUN npm run build
+  ```
+
+- **Workflow (build & push frontend)** :
+  ```yaml
+  - name: Build and push frontend image
+    uses: docker/build-push-action@v6
+    with:
+      context: ./frontend
+      push: true
+      tags: ${{ steps.meta-frontend.outputs.tags }}
+      labels: ${{ steps.meta-frontend.outputs.labels }}
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
+      build-args: |
+        VITE_API_URL=https://<TON_BACKEND>.up.railway.app
+  ```
+
+- **Code front** (ex.) :
+  ```js
+  const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+  fetch(`${base}/drivers/current`);
+  ```
+
+> ⚠️ Si tu changes l’URL backend en prod, **rebuild** l’image frontend (la variable est figée au build).
+
+### D) CORS (sans proxy)
+Autorise l’origine du front dans le backend.
+
+**FastAPI :**
+```py
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://<TON_FRONT>.up.railway.app"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+---
+
+## 🧪 Tests
+
+```bash
+# Lancer les tests backend
 cd backend
 pip install -r requirements.txt
 pytest tests/ -v
 
-# Tests avec couverture
-pytest tests/ --cov=. --cov-report=html
+# Couverture
+pytest tests/ --cov=. --cov-report=term-missing
 ```
 
-### API
+---
+
+## 🛠️ Commandes utiles Docker
+
 ```bash
-# Tester les endpoints
-curl http://localhost:8000/health
-curl http://localhost:8000/drivers/current
-curl http://localhost:8000/standings/drivers
-curl http://localhost:8000/standings/constructors
-curl http://localhost:8000/schedule/current
-curl http://localhost:8000/race/last
+# Démarrer en arrière-plan
+docker compose up -d
+
+# Logs temps réel
+docker compose logs -f
+
+# Rebuild (après modifs)
+docker compose up --build
+
+# Arrêter
+docker compose down
+
+# Nettoyer volumes (⚠️ données perdues)
+docker compose down -v
 ```
 
-## 🧪 Tests et CI/CD
+---
 
-Le pipeline GitHub Actions s'exécute automatiquement sur chaque push et pull request :
+## 🐞 Troubleshooting
 
-1. **Tests Backend** : pytest avec Redis
-2. **Linting** : flake8 pour la qualité du code
-3. **Build Docker** : construction des images
-4. **Scan de sécurité** : Trivy pour les vulnérabilités
-5. **Tests d'intégration** : vérification de l'ensemble du système
-6. **Déploiement** : sur la branche main uniquement
+- **Le front affiche rien**
+  - Ouvre DevTools → onglet **Network**
+  - Vérifie que les requêtes partent vers `https://<TON_BACKEND>/...`
+  - Erreur **CORS** → vérifie la whitelist d’origines côté backend
+  - 404 → vérifie les routes et le base URL (`VITE_API_URL`)
 
-### Configurer GitHub Actions
+- **Railway ne déploie pas le front**
+  - L’image GHCR existe et est publique (ou credentials ajoutés)
+  - Internal Port = **80**
 
-1. **Activer GitHub Actions** dans votre repo
-2. **Ajouter les secrets** (Settings > Secrets) :
-   - `SONAR_TOKEN` (optionnel, pour SonarCloud)
+- **Trivy échoue**
+  - Assure-toi que l’image est **chargée localement** (`load: true`) avant le scan
 
-3. **Push votre code**
-```bash
-git add .
-git commit -m "Initial commit"
-git push origin main
-```
+---
 
-## 📊 Endpoints de l'API
+## 📜 Licence
 
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/` | GET | Page d'accueil de l'API |
-| `/health` | GET | Health check |
-| `/drivers/current` | GET | Liste des pilotes actuels |
-| `/constructors/current` | GET | Liste des écuries actuelles |
-| `/standings/drivers` | GET | Classement des pilotes |
-| `/standings/constructors` | GET | Classement des écuries |
-| `/schedule/current` | GET | Calendrier de la saison |
-| `/race/last` | GET | Résultats de la dernière course |
-| `/driver/{driver_id}/stats` | GET | Statistiques d'un pilote |
+MIT — usage libre pour l’apprentissage.
 
-## 🔧 Améliorations futures
+---
 
-### Phase 1 - Monitoring (1-2 semaines)
-- [ ] Ajouter Prometheus pour les métriques
-- [ ] Configurer Grafana pour les dashboards
-- [ ] Implémenter des alertes
-- [ ] Ajouter des logs structurés (ELK stack)
+## 🙌 Contribuer
 
-### Phase 2 - Infrastructure as Code (2-3 semaines)
-- [ ] Terraform pour AWS/GCP/Azure
-- [ ] Créer des environnements (dev, staging, prod)
-- [ ] Configurer un CDN (CloudFront/CloudFlare)
-- [ ] Mettre en place un load balancer
+PRs bienvenues : nouvelles features, docs, refacto, fix.  
+Ouvre une issue si tu veux proposer une amélioration.
 
-### Phase 3 - Kubernetes (3-4 semaines)
-- [ ] Déployer sur Minikube localement
-- [ ] Créer les manifests K8s (Deployments, Services, Ingress)
-- [ ] Configurer les HPA (Horizontal Pod Autoscaler)
-- [ ] Implémenter des health checks K8s
-- [ ] Ajouter des secrets et ConfigMaps
+---
 
-### Phase 4 - Avancé (4-6 semaines)
-- [ ] Service mesh (Istio)
-- [ ] GitOps avec ArgoCD
-- [ ] Canary deployments
-- [ ] Blue-green deployments
-- [ ] Backup et disaster recovery
+## ✅ Checklist rapide
 
-## 🎓 Concepts DevOps couverts
+- [ ] `docker compose up --build` fonctionne en local  
+- [ ] CI passe (tests + lint + Trivy)  
+- [ ] Images poussées sur GHCR (`backend` et `frontend`)  
+- [ ] Railway : backend (port 8000) / frontend (port 80)  
+- [ ] Front construit avec `VITE_API_URL` pointant vers le backend prod  
+- [ ] CORS configuré côté backend  
 
-- ✅ **Containerization** : Docker multi-stage builds
-- ✅ **Orchestration** : Docker Compose
-- ✅ **CI/CD** : GitHub Actions
-- ✅ **Testing** : Tests unitaires et d'intégration
-- ✅ **Caching** : Redis
-- ✅ **Database** : PostgreSQL
-- ✅ **API Documentation** : Swagger/OpenAPI
-- ✅ **Security** : Trivy scanning
-- ✅ **Health Checks** : Monitoring basique
-
-## 📚 Ressources pour approfondir
-
-### Documentation officielle
-- [Docker Docs](https://docs.docker.com/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [GitHub Actions](https://docs.github.com/en/actions)
-- [Ergast F1 API](http://ergast.com/mrd/)
-
-### Tutoriels recommandés
-- Docker Mastery (Udemy)
-- Kubernetes for Developers
-- DevOps Bootcamp
-
-## 🐛 Troubleshooting
-
-### Le backend ne démarre pas
-```bash
-# Vérifier les logs
-docker compose logs backend
-
-# Vérifier que Redis et Postgres sont up
-docker compose ps
-```
-
-### Redis connection refused
-```bash
-# Redémarrer Redis
-docker compose restart redis
-
-# Vérifier les logs Redis
-docker compose logs redis
-```
-
-### L'API ne retourne pas de données
-- Vérifiez votre connexion internet (l'API Ergast est externe)
-- Vérifiez les logs : `docker-compose logs backend`
-- Testez l'API Ergast directement : https://ergast.com/api/f1/current/drivers.json
-
-### Tests qui échouent
-```bash
-# Installer les dépendances
-pip install -r backend/requirements.txt
-
-# Lancer Redis localement ou via Docker
-docker run -d -p 6379:6379 redis:7-alpine
-
-# Relancer les tests
-pytest backend/tests/ -v
-```
-
-## 🤝 Contribution
-
-Ce projet est à but éducatif. N'hésitez pas à :
-- Ajouter de nouvelles fonctionnalités
-- Améliorer le code existant
-- Corriger des bugs
-- Améliorer la documentation
-
-## 📝 Licence
-
-MIT License - Libre d'utilisation pour l'apprentissage
-
-## 🏁 Prochaines étapes
-
-1. **Comprendre le code** : Lisez et comprenez chaque fichier
-2. **Tester localement** : Lancez le projet et testez tous les endpoints
-3. **Personnaliser** : Ajoutez vos propres fonctionnalités
-4. **Déployer** : Mettez en production sur un cloud provider
-5. **Monitorer** : Ajoutez du monitoring et des alertes
-6. **Optimiser** : Améliorez les performances et la sécurité
-
-Bon apprentissage ! 🚀
+Bon run 🏁

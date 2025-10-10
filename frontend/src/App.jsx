@@ -1,236 +1,77 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Home from "./pages/Home";
+import DriversStandings from "./pages/DriversStandings";
+import ConstructorsStandings from "./pages/ConstructorsStandings";
+import Schedule from "./pages/Schedule";
+import About from "./pages/About";
+import EasterEgg from "./pages/EasterEgg";
+import { API_URL } from "./api"; // <-- si tu as un api.js ; sinon supprime cette ligne
 
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
-
-// Axios instance
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 15000,
-  headers: { 'X-Requested-With': 'XMLHttpRequest' }
-})
-
-function App() {
-  const [drivers, setDrivers] = useState([])
-  const [standings, setStandings] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('standings')
-
-  useEffect(() => {
-    loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const [standingsRes, driversRes] = await Promise.all([
-        api.get('/standings/drivers'),
-        api.get('/drivers/current'),
-      ])
-      const sRaw = standingsRes?.data;
-      const dRaw = driversRes?.data;
-
-      // si jamais ton backend renvoyait une autre forme (par ex. objet),
-      // on force en tableau pour éviter ".map is not a function"
-      const s = Array.isArray(sRaw)
-        ? sRaw
-        : (sRaw?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings ?? []);
-      const d = Array.isArray(dRaw) ? dRaw : toArray(dRaw);
-      setStandings(standingsRes.data || [])
-      setDrivers(driversRes.data || [])
-    } catch (err) {
-      console.error('Erreur lors du chargement des données:', err)
-      const msg = err?.response?.data?.detail || err.message || 'Erreur réseau'
-      setError(`Impossible de charger les données (${msg}).`)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const Banner = () =>
-    (!API_URL) ? (
-      <div className="bg-yellow-600 text-black px-4 py-2 text-sm text-center">
-        ⚠️ VITE_API_URL est vide. Configure l’URL de l’API au build.
-      </div>
-    ) : null
-
-  const SkeletonRow = ({ count = 10 }) => (
-    <tbody className="divide-y divide-gray-700">
-      {Array.from({ length: count }).map((_, i) => (
-        <tr key={`sk-${i}`} className="animate-pulse">
-          <td className="px-6 py-4"><div className="h-4 bg-gray-700 rounded w-10" /></td>
-          <td className="px-6 py-4"><div className="h-4 bg-gray-700 rounded w-40 mb-2" /><div className="h-3 bg-gray-800 rounded w-24" /></td>
-          <td className="px-6 py-4"><div className="h-4 bg-gray-700 rounded w-32" /></td>
-          <td className="px-6 py-4"><div className="h-4 bg-gray-700 rounded w-12" /></td>
-          <td className="px-6 py-4"><div className="h-4 bg-gray-700 rounded w-12" /></td>
-        </tr>
-      ))}
-    </tbody>
-  )
-
+export default function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <Banner />
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative">
+      {/* Background décoratif (grid + glow) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 
+                   [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)]"
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.035)_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[80vw] h-[40vh] rounded-full blur-3xl bg-red-600/20" />
+      </div>
 
-      <header className="bg-red-600 shadow-lg">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+      {/* Header sticky + gradient + blur */}
+      <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-red-600/70 bg-red-600/90 shadow-[0_10px_30px_-10px_rgba(0,0,0,.5)]">
+        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold">🏎️ F1 Dashboard</h1>
-            <p className="text-red-100 mt-2">Statistiques en temps réel de la Formule 1</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+              <span className="mr-2">🏎️</span>F1 Dashboard
+            </h1>
+            <p className="text-red-50/90 text-sm md:text-base mt-1">
+              Statistiques en temps réel de la Formule 1
+            </p>
           </div>
+
+          {/* Badge d’environnement / URL API */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-red-100 opacity-80">API:</span>
-            <code className="text-xs bg-red-700/40 px-2 py-1 rounded">{API_URL || 'NON DÉFINIE'}</code>
-            <button
-              onClick={loadData}
-              className="ml-3 px-3 py-2 bg-black/20 hover:bg-black/30 rounded border border-white/20 text-sm"
-              title="Rafraîchir"
-            >
-              ↻ Refresh
-            </button>
+            <span className="hidden sm:inline text-xs text-red-50/80">API</span>
+            <code className="text-[10px] sm:text-xs px-2 py-1 rounded-full bg-black/20 border border-white/10">
+              {API_URL || "non définie"}
+            </code>
           </div>
         </div>
+
+        {/* Séparateur animé */}
+        <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        {error && (
-          <div className="bg-red-600/20 border border-red-600/40 text-red-200 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+      <BrowserRouter>
+        <Navbar />
 
-        {/* Tabs */}
-        <div className="flex space-x-4 mb-6">
-          <button
-            onClick={() => setActiveTab('standings')}
-            className={`px-6 py-3 rounded-lg font-semibold transition ${
-              activeTab === 'standings'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Classement
-          </button>
-          <button
-            onClick={() => setActiveTab('drivers')}
-            className={`px-6 py-3 rounded-lg font-semibold transition ${
-              activeTab === 'drivers'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Pilotes
-          </button>
-        </div>
-
-        {/* Classement */}
-        {activeTab === 'standings' && Array.isArray(standings) && (
-          <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-            <div className="px-6 py-4 bg-gray-700 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Classement des Pilotes</h2>
-              <span className="text-gray-300 text-sm">
-                {loading ? 'Chargement…' : `${standings.length} entrées`}
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left">Position</th>
-                    <th className="px-6 py-3 text-left">Pilote</th>
-                    <th className="px-6 py-3 text-left">Écurie</th>
-                    <th className="px-6 py-3 text-left">Points</th>
-                    <th className="px-6 py-3 text-left">Victoires</th>
-                  </tr>
-                </thead>
-
-                {loading ? (
-                  <SkeletonRow count={10} />
-                ) : (
-                  <tbody className="divide-y divide-gray-700">
-                    {standings.map((s) => {
-                      const pos = Number(s.position)
-                      return (
-                        <tr key={`${pos}-${s.Driver?.driverId || s.Driver?.code}`} className="hover:bg-gray-700 transition">
-                          <td className="px-6 py-4 font-bold text-xl">
-                            {pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div>
-                              <div className="font-semibold">
-                                {s.Driver?.givenName} {s.Driver?.familyName}
-                              </div>
-                              <div className="text-sm text-gray-400">
-                                {s.Driver?.nationality}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {s.Constructors?.[0]?.name || '—'}
-                          </td>
-                          <td className="px-6 py-4 font-bold text-red-400">
-                            {s.points}
-                          </td>
-                          <td className="px-6 py-4">{s.wins ?? '0'}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                )}
-              </table>
+        {/* Shell “glass” pour le contenu */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="rounded-2xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-sm">
+            <div className="p-4 md:p-6">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/standings/drivers" element={<DriversStandings />} />
+                <Route path="/standings/constructors" element={<ConstructorsStandings />} />
+                <Route path="/schedule" element={<Schedule />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/warp" element={<EasterEgg />} />
+                <Route
+                  path="*"
+                  element={<div className="text-gray-300">Page introuvable.</div>}
+                />
+              </Routes>
             </div>
           </div>
-        )}
+        </main>
 
-        {/* Liste des pilotes */}
-        {activeTab === 'drivers' && Array.isArray(drivers) && (
-          <div>
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={`skd-${i}`} className="bg-gray-800 rounded-lg shadow-xl p-6 animate-pulse">
-                    <div className="h-6 bg-gray-700 rounded w-48 mb-3"></div>
-                    <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
-                    <div className="h-4 bg-gray-700 rounded w-16"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {drivers.map((d) => (
-                  <div key={d.driverId} className="bg-gray-800 rounded-lg shadow-xl p-6 hover:bg-gray-700 transition">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-4xl">🏁</div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold">
-                          {d.givenName} {d.familyName}
-                        </h3>
-                        <p className="text-gray-400">{d.nationality}</p>
-                        <p className="text-sm text-gray-500">#{d.permanentNumber || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-gray-700 text-sm text-gray-300">
-                      Date de naissance : {d.dateOfBirth}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <footer className="bg-gray-800 mt-12 py-6">
-        <div className="container mx-auto px-4 text-center text-gray-400">
-          <p>Données fournies par l'API Ergast F1</p>
-          <p className="text-sm mt-2">Projet DevOps - Apprentissage</p>
-        </div>
-      </footer>
+        <Footer />
+      </BrowserRouter>
     </div>
-  )
+  );
 }
-
-export default App

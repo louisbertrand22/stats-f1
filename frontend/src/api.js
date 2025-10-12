@@ -49,6 +49,16 @@ export const getRaceResult = async (season, round) => {
   }
 };
 
+export const getLastRace = async () => {
+  try {
+    const { data } = await api.get("/race/last");
+    return data;
+  } catch (error) {
+    console.error("Error fetching last race:", error);
+    return null;
+  }
+};
+
 export const getAllDriverStats = async () => {
   const { data } = await api.get("/drivers/stats");
   return Array.isArray(data) ? data : [];

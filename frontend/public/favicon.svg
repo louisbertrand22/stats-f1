@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="32" fill="#DC2626"/>
+  
+  <!-- F1 Car body -->
+  <path d="M 18 28 L 22 26 L 38 26 L 42 28 L 46 30 L 48 32 L 46 34 L 42 36 L 38 38 L 22 38 L 18 36 L 16 34 L 16 30 Z" fill="#FFFFFF"/>
+  
+  <!-- Front wing -->
+  <rect x="14" y="30" width="4" height="4" fill="#FFFFFF"/>
+  
+  <!-- Rear wing -->
+  <path d="M 46 28 L 50 26 L 50 38 L 46 36 Z" fill="#FFFFFF"/>
+  
+  <!-- Wheels -->
+  <circle cx="24" cy="38" r="4" fill="#1F2937"/>
+  <circle cx="40" cy="38" r="4" fill="#1F2937"/>
+  
+  <!-- Wheel centers -->
+  <circle cx="24" cy="38" r="2" fill="#6B7280"/>
+  <circle cx="40" cy="38" r="2" fill="#6B7280"/>
+  
+  <!-- Cockpit -->
+  <ellipse cx="32" cy="30" rx="6" ry="3" fill="#DC2626"/>
+  
+  <!-- Details/vents -->
+  <line x1="26" y1="32" x2="28" y2="32" stroke="#DC2626" stroke-width="1"/>
+  <line x1="36" y1="32" x2="38" y2="32" stroke="#DC2626" stroke-width="1"/>
+</svg>

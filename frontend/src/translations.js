@@ -1,0 +1,138 @@
+export const translations = {
+  fr: {
+    // Header
+    appTitle: "F1 Dashboard",
+    appSubtitle: "Statistiques en temps réel de la Formule 1",
+    apiLabel: "API",
+    apiUndefined: "non définie",
+    
+    // Navigation
+    navHome: "Accueil",
+    navDrivers: "Pilotes",
+    navConstructors: "Constructeurs",
+    navStats: "Statistiques",
+    navSchedule: "Calendrier",
+    navAbout: "À propos",
+    
+    // Home page
+    top3Drivers: "Top 3 Pilotes",
+    mode: "Mode",
+    lastRace: "Dernière Course",
+    nextRace: "Prochaine Course",
+    podium: "Podium",
+    loading: "Chargement du dashboard...",
+    networkError: "Erreur réseau",
+    pageNotFound: "Page introuvable.",
+    
+    // About page
+    aboutTitle: "À propos du projet",
+    aboutDescription: "F1 Dashboard est un projet d'apprentissage DevOps : FastAPI (backend), React+Vite (frontend), Docker, CI/CD GitHub Actions, scans Trivy, images publiées sur GHCR et déployées sur Railway.",
+    programmingLanguages: "🗣️ Langages de programmation",
+    backend: "Backend",
+    frontend: "Frontend",
+    technologies: "🧰 Technologies utilisées",
+    devopsInfra: "🚀 DevOps & Infrastructure",
+    architectureNote: "Note d'architecture :",
+    architectureText: "Pas de proxy /api — le frontend appelle directement",
+    apiUrl: "l'URL de l'API",
+    
+    // Driver Standings
+    driversStandings: "Classement des Pilotes",
+    position: "Position",
+    driver: "Pilote",
+    constructor: "Constructeur",
+    points: "Points",
+    wins: "Victoires",
+    
+    // Constructor Standings
+    constructorsStandings: "Classement des Constructeurs",
+    
+    // Schedule
+    schedule: "Calendrier",
+    round: "Round",
+    grandPrix: "Grand Prix",
+    circuit: "Circuit",
+    location: "Lieu",
+    date: "Date",
+    
+    // Pilot Stats
+    pilotStats: "Statistiques des Pilotes",
+    nationality: "Nationalité",
+    permanentNumber: "Numéro permanent",
+    code: "Code",
+    
+    // Common
+    loadingData: "Chargement...",
+  },
+  en: {
+    // Header
+    appTitle: "F1 Dashboard",
+    appSubtitle: "Real-time Formula 1 Statistics",
+    apiLabel: "API",
+    apiUndefined: "not defined",
+    
+    // Navigation
+    navHome: "Home",
+    navDrivers: "Drivers",
+    navConstructors: "Constructors",
+    navStats: "Statistics",
+    navSchedule: "Schedule",
+    navAbout: "About",
+    
+    // Home page
+    top3Drivers: "Top 3 Drivers",
+    mode: "Mode",
+    lastRace: "Last Race",
+    nextRace: "Next Race",
+    podium: "Podium",
+    loading: "Loading dashboard...",
+    networkError: "Network error",
+    pageNotFound: "Page not found.",
+    
+    // About page
+    aboutTitle: "About the Project",
+    aboutDescription: "F1 Dashboard is a DevOps learning project: FastAPI (backend), React+Vite (frontend), Docker, CI/CD GitHub Actions, Trivy scans, images published on GHCR and deployed on Railway.",
+    programmingLanguages: "🗣️ Programming Languages",
+    backend: "Backend",
+    frontend: "Frontend",
+    technologies: "🧰 Technologies Used",
+    devopsInfra: "🚀 DevOps & Infrastructure",
+    architectureNote: "Architecture note:",
+    architectureText: "No /api proxy — the frontend calls directly",
+    apiUrl: "the API URL",
+    
+    // Driver Standings
+    driversStandings: "Drivers Standings",
+    position: "Position",
+    driver: "Driver",
+    constructor: "Constructor",
+    points: "Points",
+    wins: "Wins",
+    
+    // Constructor Standings
+    constructorsStandings: "Constructors Standings",
+    
+    // Schedule
+    schedule: "Schedule",
+    round: "Round",
+    grandPrix: "Grand Prix",
+    circuit: "Circuit",
+    location: "Location",
+    date: "Date",
+    
+    // Pilot Stats
+    pilotStats: "Driver Statistics",
+    nationality: "Nationality",
+    permanentNumber: "Permanent Number",
+    code: "Code",
+    
+    // Common
+    loadingData: "Loading...",
+  }
+};
+
+export const useTranslation = (language) => {
+  return (key) => {
+    return translations[language]?.[key] || key;
+  };
+};

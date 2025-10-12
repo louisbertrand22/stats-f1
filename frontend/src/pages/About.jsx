@@ -1,29 +1,34 @@
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTranslation } from "../translations";
+
 export default function About() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
+
   return (
     <div className="bg-gray-800 rounded-lg shadow-xl p-6 space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-4">À propos du projet</h2>
+        <h2 className="text-2xl font-bold mb-4">{t("aboutTitle")}</h2>
         <p className="text-gray-300">
-          F1 Dashboard est un projet d'apprentissage DevOps : FastAPI (backend), React+Vite (frontend), Docker, CI/CD GitHub Actions,
-          scans Trivy, images publiées sur GHCR et déployées sur Railway.
+          {t("aboutDescription")}
         </p>
       </div>
 
       {/* Languages Section */}
       <div>
-        <h3 className="text-xl font-bold mb-3 text-red-400">🗣️ Langages de programmation</h3>
+        <h3 className="text-xl font-bold mb-3 text-red-400">{t("programmingLanguages")}</h3>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-gray-700 rounded-lg p-4">
-            <h4 className="font-semibold text-white mb-2">Backend</h4>
+            <h4 className="font-semibold text-white mb-2">{t("backend")}</h4>
             <ul className="text-gray-300 space-y-1">
-              <li>• <span className="font-medium">Python 3.11</span> — langage principal du backend</li>
+              <li>• <span className="font-medium">Python 3.11</span> — {language === "fr" ? "langage principal du backend" : "main backend language"}</li>
             </ul>
           </div>
           <div className="bg-gray-700 rounded-lg p-4">
-            <h4 className="font-semibold text-white mb-2">Frontend</h4>
+            <h4 className="font-semibold text-white mb-2">{t("frontend")}</h4>
             <ul className="text-gray-300 space-y-1">
-              <li>• <span className="font-medium">JavaScript (ES6+)</span> — langage principal du frontend</li>
-              <li>• <span className="font-medium">JSX</span> — syntaxe React pour les composants</li>
+              <li>• <span className="font-medium">JavaScript (ES6+)</span> — {language === "fr" ? "langage principal du frontend" : "main frontend language"}</li>
+              <li>• <span className="font-medium">JSX</span> — {language === "fr" ? "syntaxe React pour les composants" : "React component syntax"}</li>
             </ul>
           </div>
         </div>
@@ -31,10 +36,10 @@ export default function About() {
 
       {/* Technologies Section */}
       <div>
-        <h3 className="text-xl font-bold mb-3 text-red-400">🧰 Technologies utilisées</h3>
+        <h3 className="text-xl font-bold mb-3 text-red-400">{t("technologies")}</h3>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-gray-700 rounded-lg p-4">
-            <h4 className="font-semibold text-white mb-2">Backend</h4>
+            <h4 className="font-semibold text-white mb-2">{t("backend")}</h4>
             <ul className="text-gray-300 space-y-1">
               <li>• <span className="font-medium">FastAPI</span> — framework web moderne et performant</li>
               <li>• <span className="font-medium">Uvicorn</span> — serveur ASGI pour FastAPI</li>
@@ -44,7 +49,7 @@ export default function About() {
             </ul>
           </div>
           <div className="bg-gray-700 rounded-lg p-4">
-            <h4 className="font-semibold text-white mb-2">Frontend</h4>
+            <h4 className="font-semibold text-white mb-2">{t("frontend")}</h4>
             <ul className="text-gray-300 space-y-1">
               <li>• <span className="font-medium">React 18</span> — bibliothèque UI moderne</li>
               <li>• <span className="font-medium">Vite</span> — outil de build ultra-rapide</li>
@@ -59,7 +64,7 @@ export default function About() {
 
       {/* DevOps Section */}
       <div>
-        <h3 className="text-xl font-bold mb-3 text-red-400">🚀 DevOps & Infrastructure</h3>
+        <h3 className="text-xl font-bold mb-3 text-red-400">{t("devopsInfra")}</h3>
         <div className="bg-gray-700 rounded-lg p-4">
           <ul className="text-gray-300 space-y-1">
             <li>• <span className="font-medium">Docker</span> — conteneurisation avec multi-stage builds</li>
@@ -75,8 +80,7 @@ export default function About() {
       {/* Architecture Note */}
       <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
         <p className="text-gray-300 text-sm">
-          <span className="font-semibold text-white">Note d'architecture :</span> Pas de proxy /api — 
-          le frontend appelle directement <code className="bg-gray-800 px-2 py-1 rounded text-red-300">{import.meta.env.VITE_API_URL || "l'URL de l'API"}</code>
+          <span className="font-semibold text-white">{t("architectureNote")}</span> {t("architectureText")} <code className="bg-gray-800 px-2 py-1 rounded text-red-300">{import.meta.env.VITE_API_URL || t("apiUrl")}</code>
         </p>
       </div>
     </div>

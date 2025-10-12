@@ -609,35 +609,126 @@ MOCK_RACE_RESULTS = {
         {"circuitId": "albert_park", "circuitName": "Albert Park Circuit",
          "Location": {"lat": "-37.8497", "long": "144.968", "locality": "Melbourne", "country": "Australia"}},
         "2025-03-16", "05:00:00Z",
-        "piastri", "norris", "verstappen"
+        "norris", "piastri", "verstappen"
     ),
     ("2025", "2"): _create_race_result(
         "2025", "2", "Chinese Grand Prix",
         {"circuitId": "shanghai", "circuitName": "Shanghai International Circuit",
          "Location": {"lat": "31.3389", "long": "121.220", "locality": "Shanghai", "country": "China"}},
         "2025-03-23", "07:00:00Z",
-        "verstappen", "piastri", "norris"
+        "piastri", "norris", "verstappen"
     ),
     ("2025", "3"): _create_race_result(
         "2025", "3", "Japanese Grand Prix",
         {"circuitId": "suzuka", "circuitName": "Suzuka Circuit",
          "Location": {"lat": "34.8431", "long": "136.541", "locality": "Suzuka", "country": "Japan"}},
         "2025-04-06", "06:00:00Z",
-        "norris", "verstappen", "russell"
+        "verstappen", "norris", "piastri"
     ),
     ("2025", "4"): _create_race_result(
         "2025", "4", "Bahrain Grand Prix",
         {"circuitId": "bahrain", "circuitName": "Bahrain International Circuit",
          "Location": {"lat": "26.0325", "long": "50.5106", "locality": "Sakhir", "country": "Bahrain"}},
         "2025-04-13", "15:00:00Z",
-        "piastri", "leclerc", "hamilton"
+        "piastri", "norris", "verstappen"
     ),
     ("2025", "5"): _create_race_result(
         "2025", "5", "Saudi Arabian Grand Prix",
         {"circuitId": "jeddah", "circuitName": "Jeddah Corniche Circuit",
          "Location": {"lat": "21.6319", "long": "39.1044", "locality": "Jeddah", "country": "Saudi Arabia"}},
         "2025-04-20", "17:00:00Z",
+        "piastri", "verstappen", "norris"
+    ),
+    ("2025", "6"): _create_race_result(
+        "2025", "6", "Miami Grand Prix",
+        {"circuitId": "miami", "circuitName": "Miami International Autodrome",
+         "Location": {"lat": "25.9581", "long": "-80.2389", "locality": "Miami", "country": "USA"}},
+        "2025-05-04", "19:30:00Z",
+        "piastri", "norris", "verstappen"
+    ),
+    ("2025", "7"): _create_race_result(
+        "2025", "7", "Emilia Romagna Grand Prix",
+        {"circuitId": "imola", "circuitName": "Autodromo Enzo e Dino Ferrari",
+         "Location": {"lat": "44.3439", "long": "11.7167", "locality": "Imola", "country": "Italy"}},
+        "2025-05-18", "13:00:00Z",
         "verstappen", "norris", "piastri"
+    ),
+    ("2025", "8"): _create_race_result(
+        "2025", "8", "Monaco Grand Prix",
+        {"circuitId": "monaco", "circuitName": "Circuit de Monaco",
+         "Location": {"lat": "43.7347", "long": "7.42056", "locality": "Monte Carlo", "country": "Monaco"}},
+        "2025-05-25", "13:00:00Z",
+        "norris", "piastri", "verstappen"
+    ),
+    ("2025", "9"): _create_race_result(
+        "2025", "9", "Spanish Grand Prix",
+        {"circuitId": "catalunya", "circuitName": "Circuit de Barcelona-Catalunya",
+         "Location": {"lat": "41.5700", "long": "2.2611", "locality": "Montmeló", "country": "Spain"}},
+        "2025-06-01", "13:00:00Z",
+        "piastri", "norris", "verstappen"
+    ),
+    ("2025", "10"): _create_race_result(
+        "2025", "10", "Canadian Grand Prix",
+        {"circuitId": "villeneuve", "circuitName": "Circuit Gilles Villeneuve",
+         "Location": {"lat": "45.5000", "long": "-73.5228", "locality": "Montreal", "country": "Canada"}},
+        "2025-06-15", "18:00:00Z",
+        "russell", "norris", "piastri"
+    ),
+    ("2025", "11"): _create_race_result(
+        "2025", "11", "Austrian Grand Prix",
+        {"circuitId": "red_bull_ring", "circuitName": "Red Bull Ring",
+         "Location": {"lat": "47.2197", "long": "14.7647", "locality": "Spielberg", "country": "Austria"}},
+        "2025-06-29", "13:00:00Z",
+        "norris", "verstappen", "piastri"
+    ),
+    ("2025", "12"): _create_race_result(
+        "2025", "12", "British Grand Prix",
+        {"circuitId": "silverstone", "circuitName": "Silverstone Circuit",
+         "Location": {"lat": "52.0786", "long": "-1.0169", "locality": "Silverstone", "country": "UK"}},
+        "2025-07-06", "14:00:00Z",
+        "norris", "piastri", "verstappen"
+    ),
+    ("2025", "13"): _create_race_result(
+        "2025", "13", "Belgian Grand Prix",
+        {"circuitId": "spa", "circuitName": "Circuit de Spa-Francorchamps",
+         "Location": {"lat": "50.4372", "long": "5.9714", "locality": "Spa", "country": "Belgium"}},
+        "2025-07-27", "13:00:00Z",
+        "piastri", "norris", "verstappen"
+    ),
+    ("2025", "14"): _create_race_result(
+        "2025", "14", "Hungarian Grand Prix",
+        {"circuitId": "hungaroring", "circuitName": "Hungaroring",
+         "Location": {"lat": "47.5789", "long": "19.2486", "locality": "Budapest", "country": "Hungary"}},
+        "2025-08-03", "13:00:00Z",
+        "norris", "piastri", "verstappen"
+    ),
+    ("2025", "15"): _create_race_result(
+        "2025", "15", "Dutch Grand Prix",
+        {"circuitId": "zandvoort", "circuitName": "Circuit Zandvoort",
+         "Location": {"lat": "52.3888", "long": "4.5408", "locality": "Zandvoort", "country": "Netherlands"}},
+        "2025-08-31", "13:00:00Z",
+        "piastri", "verstappen", "norris"
+    ),
+    ("2025", "16"): _create_race_result(
+        "2025", "16", "Italian Grand Prix",
+        {"circuitId": "monza", "circuitName": "Autodromo Nazionale di Monza",
+         "Location": {"lat": "45.6156", "long": "9.2811", "locality": "Monza", "country": "Italy"}},
+        "2025-09-07", "13:00:00Z",
+        "verstappen", "piastri", "norris"
+    ),
+    ("2025", "17"): _create_race_result(
+        "2025", "17", "Azerbaijan Grand Prix",
+        {"circuitId": "baku", "circuitName": "Baku City Circuit",
+         "Location": {"lat": "40.3725", "long": "49.8533", "locality": "Baku", "country": "Azerbaijan"}},
+        "2025-09-21", "12:00:00Z",
+        "verstappen", "norris", "piastri"
+    ),
+    ("2025", "18"): _create_race_result(
+        "2025", "18", "Singapore Grand Prix",
+        {"circuitId": "marina_bay", "circuitName": "Marina Bay Street Circuit",
+         "Location": {"lat": "1.2914", "long": "103.864", "locality": "Singapore", "country": "Singapore"}},
+        "2025-10-05", "12:00:00Z",
+        "russell", "verstappen", "norris"
     ),
 }
 

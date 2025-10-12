@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import LanguageSwitcher from "./components/LanguageSwitcher";
 import Home from "./pages/Home";
 import DriversStandings from "./pages/DriversStandings";
 import ConstructorsStandings from "./pages/ConstructorsStandings";
@@ -8,9 +9,14 @@ import Schedule from "./pages/Schedule";
 import About from "./pages/About";
 import EasterEgg from "./pages/EasterEgg";
 import PilotStats from "./pages/PilotStats";
+import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
+import { useTranslation } from "./translations";
 import { API_URL } from "./api"; // <-- si tu as un api.js ; sinon supprime cette ligne
 
-export default function App() {
+function AppContent() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative">
       {/* Background décoratif (grid + glow) */}
@@ -28,18 +34,19 @@ export default function App() {
         <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-              <span className="mr-2">🏎️</span>F1 Dashboard
+              <span className="mr-2">🏎️</span>{t("appTitle")}
             </h1>
             <p className="text-red-50/90 text-sm md:text-base mt-1">
-              Statistiques en temps réel de la Formule 1
+              {t("appSubtitle")}
             </p>
           </div>
 
-          {/* Badge d’environnement / URL API */}
+          {/* Badge d'environnement / URL API + Language Switcher */}
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline text-xs text-red-50/80">API</span>
+            <LanguageSwitcher />
+            <span className="hidden sm:inline text-xs text-red-50/80">{t("apiLabel")}</span>
             <code className="text-[10px] sm:text-xs px-2 py-1 rounded-full bg-black/20 border border-white/10">
-              {API_URL || "non définie"}
+              {API_URL || t("apiUndefined")}
             </code>
           </div>
         </div>
@@ -65,7 +72,7 @@ export default function App() {
                 <Route path="/warp" element={<EasterEgg />} />
                 <Route
                   path="*"
-                  element={<div className="text-gray-300">Page introuvable.</div>}
+                  element={<div className="text-gray-300">{t("pageNotFound")}</div>}
                 />
               </Routes>
             </div>
@@ -75,5 +82,13 @@ export default function App() {
         <Footer />
       </BrowserRouter>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }

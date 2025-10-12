@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { getDriverStandings, getHealth, getRaceResult, getSchedule } from "../api";
 import Loader from "../components/Loader";
 import ErrorBanner from "../components/ErrorBanner";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTranslation } from "../translations";
 
 export default function Home() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [top3, setTop3] = useState([]);
   const [health, setHealth] = useState(null);
   const [lastRace, setLastRace] = useState(null);
@@ -44,12 +48,12 @@ export default function Home() {
           setNextRace(upcoming || null);
         }
       } catch (e) {
-        setError(e?.message || "Erreur réseau");
+        setError(e?.message || t("networkError"));
       }
     })();
-  }, []);
+  }, [t]);
 
-  if (!top3.length && !health && !error) return <Loader text="Chargement du dashboard..." />;
+  if (!top3.length && !health && !error) return <Loader text={t("loading")} />;
 
   return (
     <div className="space-y-6">
@@ -57,10 +61,10 @@ export default function Home() {
 
       <section className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
         <div className="px-6 py-4 bg-gray-700 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Top 3 Pilotes</h2>
+          <h2 className="text-2xl font-bold">{t("top3Drivers")}</h2>
           {health && (
             <span className="text-sm text-gray-300">
-              Mode: <b>{health.mode}</b> • Redis: {health.redis}
+              {t("mode")}: <b>{health.mode}</b> • Redis: {health.redis}
             </span>
           )}
         </div>
@@ -87,7 +91,7 @@ export default function Home() {
       {lastRace && lastRace.Results && (
         <section className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="px-6 py-4 bg-gray-700">
-            <h2 className="text-2xl font-bold">Dernière Course</h2>
+            <h2 className="text-2xl font-bold">{t("lastRace")}</h2>
           </div>
           <div className="px-6 py-4">
             <div className="mb-3">
@@ -102,7 +106,7 @@ export default function Home() {
               </div>
             </div>
             <div className="border-t border-gray-700 pt-3">
-              <div className="text-sm font-semibold text-gray-300 mb-2">Podium</div>
+              <div className="text-sm font-semibold text-gray-300 mb-2">{t("podium")}</div>
               <div className="flex flex-col gap-3">
                 {lastRace.Results.slice(0, 3).map((result, index) => {
                   const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
@@ -129,7 +133,7 @@ export default function Home() {
       {nextRace && (
         <section className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="px-6 py-4 bg-gray-700">
-            <h2 className="text-2xl font-bold">Prochaine Course</h2>
+            <h2 className="text-2xl font-bold">{t("nextRace")}</h2>
           </div>
           <div className="px-6 py-4">
             <div className="font-semibold text-lg mb-2">

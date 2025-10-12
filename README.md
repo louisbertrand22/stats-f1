@@ -8,7 +8,7 @@ Application **full-stack** qui affiche des statistiques F1 (pilotes, classements
 
 - **Frontend** : React + Vite, buildé en fichiers statiques et servi par **Nginx**.
 - **Backend** : **FastAPI** (Python) exposant des endpoints REST (health, drivers, standings…).
-- **Données** : alimentées par l’API publique **Ergast F1**.
+- **Données** : **Mock data** (recommandé) avec statistiques précises fin 2024, ou API publique **Ergast F1** (discontinuée).
 - **Cache (optionnel)** : **Redis** pour éviter de solliciter l’API externe à chaque requête.
 - **CI/CD** : GitHub Actions (tests, lint, build images, scan Trivy, push vers GHCR, déploiement).
 - **Prod** : images Docker poussées sur **GitHub Container Registry (GHCR)** et services déployés sur **Railway**.
@@ -16,10 +16,13 @@ Application **full-stack** qui affiche des statistiques F1 (pilotes, classements
 ### Schéma (simplifié)
 
 ```
-Frontend (React+Nginx)  -->  Backend (FastAPI)  -->  Ergast F1 API
-                               │
+Frontend (React+Nginx)  -->  Backend (FastAPI)  -->  Mock Data (recommandé)
+                               │                      ou Ergast F1 API (discontinuée)
                                └─► Redis (cache, optionnel)
 ```
+
+> ⚠️ **Important**: L'API Ergast a été discontinuée fin 2024. Utilisez `USE_MOCK_DATA=true` en production.  
+> Voir [DEPLOYMENT.md](DEPLOYMENT.md) pour les détails de configuration.
 
 ---
 

@@ -87,11 +87,14 @@ def test_get_schedule():
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
-    assert len(data) > 0
+    assert len(data) == 24  # Full 2025 season schedule
     assert "raceName" in data[0]
     assert "date" in data[0]
     assert "Circuit" in data[0]
     assert data[0]["raceName"] == "Australian Grand Prix"
+    # Verify last race
+    assert data[-1]["raceName"] == "Abu Dhabi Grand Prix"
+    assert data[-1]["round"] == "24"
 
 def test_get_last_race():
     """Test de la dernière course"""
@@ -102,6 +105,9 @@ def test_get_last_race():
     assert "raceName" in data
     assert "Results" in data
     assert len(data["Results"]) > 0
+    # Verify it's the last race of the season
+    assert data["raceName"] == "Abu Dhabi Grand Prix"
+    assert data["round"] == "24"
 
 def test_driver_stats_verstappen():
     """Test des statistiques de Verstappen"""

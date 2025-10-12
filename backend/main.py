@@ -78,6 +78,7 @@ async def root():
             "/schedule/current",
             "/race/last",
             "/race/{season}/{round}",
+            "/drivers/stats",
             "/driver/{driver_id}/stats",
         ],
     }
@@ -209,6 +210,80 @@ async def api_get_race_result(season: str, round: str):
     if result is None:
         raise HTTPException(status_code=404, detail=f"Résultats non disponibles pour la course {season}/{round}")
     return result
+
+@app.get("/drivers/stats")
+async def api_get_all_driver_stats():
+    """Get statistics for all current drivers"""
+    if USE_MOCK_DATA:
+        # Career statistics updated with realistic 2024 F1 data
+        all_stats = [
+            {"driver_id": "verstappen", "name": "Max Verstappen", "total_wins": 62, "total_podiums": 109, "total_races": 199, "total_poles": 40},
+            {"driver_id": "hamilton",   "name": "Lewis Hamilton",   "total_wins": 105, "total_podiums": 201, "total_races": 350, "total_poles": 104},
+            {"driver_id": "leclerc",    "name": "Charles Leclerc",    "total_wins": 7, "total_podiums": 37, "total_races": 135, "total_poles": 25},
+            {"driver_id": "norris",     "name": "Lando Norris",     "total_wins": 4, "total_podiums": 23, "total_races": 118, "total_poles": 5},
+            {"driver_id": "piastri",    "name": "Oscar Piastri",    "total_wins": 2, "total_podiums": 8, "total_races": 45, "total_poles": 0},
+            {"driver_id": "russell",    "name": "George Russell",    "total_wins": 3, "total_podiums": 13, "total_races": 87, "total_poles": 3},
+            {"driver_id": "alonso",     "name": "Fernando Alonso",     "total_wins": 32, "total_podiums": 106, "total_races": 395, "total_poles": 22},
+            {"driver_id": "sainz_jr",   "name": "Carlos Sainz Jr.",   "total_wins": 4, "total_podiums": 25, "total_races": 201, "total_poles": 6},
+            {"driver_id": "tsunoda",    "name": "Yuki Tsunoda",    "total_wins": 0, "total_podiums": 0, "total_races": 88, "total_poles": 0},
+            {"driver_id": "albon",      "name": "Alex Albon",      "total_wins": 0, "total_podiums": 2, "total_races": 91, "total_poles": 0},
+            {"driver_id": "gasly",      "name": "Pierre Gasly",      "total_wins": 1, "total_podiums": 4, "total_races": 135, "total_poles": 0},
+            {"driver_id": "ocon",       "name": "Esteban Ocon",       "total_wins": 1, "total_podiums": 3, "total_races": 143, "total_poles": 0},
+            {"driver_id": "stroll",     "name": "Lance Stroll",     "total_wins": 0, "total_podiums": 3, "total_races": 158, "total_poles": 1},
+            {"driver_id": "hulkenberg", "name": "Nico Hülkenberg", "total_wins": 0, "total_podiums": 0, "total_races": 215, "total_poles": 1},
+            {"driver_id": "antonelli",  "name": "Kimi Antonelli",  "total_wins": 0, "total_podiums": 0, "total_races": 2, "total_poles": 0},
+            {"driver_id": "bearman",    "name": "Oliver Bearman",    "total_wins": 0, "total_podiums": 0, "total_races": 5, "total_poles": 0},
+            {"driver_id": "lawson",     "name": "Liam Lawson",     "total_wins": 0, "total_podiums": 0, "total_races": 11, "total_poles": 0},
+            {"driver_id": "colapinto",  "name": "Franco Colapinto",  "total_wins": 0, "total_podiums": 0, "total_races": 9, "total_poles": 0},
+            {"driver_id": "hadjar",     "name": "Isack Hadjar",     "total_wins": 0, "total_podiums": 0, "total_races": 0, "total_poles": 0},
+            {"driver_id": "bortoleto",  "name": "Gabriel Bortoleto",  "total_wins": 0, "total_podiums": 0, "total_races": 0, "total_poles": 0},
+        ]
+        return all_stats
+
+    async def fetch():
+        try:
+            async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, headers={"User-Agent": "f1-dashboard/1.0"}) as client:
+                # Get current drivers list
+                drivers_r = await client.get(f"{ERGAST_BASE_URL}/current/drivers.json")
+                drivers_r.raise_for_status()
+                drivers = drivers_r.json()["MRData"]["DriverTable"]["Drivers"]
+                
+                all_stats = []
+                for driver in drivers:
+                    driver_id = driver["driverId"]
+                    given_name = driver.get("givenName", "")
+                    family_name = driver.get("familyName", "")
+                    name = f"{given_name} {family_name}".strip()
+                    
+                    # Fetch stats for each driver
+                    wins_r = await client.get(f"{ERGAST_BASE_URL}/drivers/{driver_id}/results/1.json?limit=1000")
+                    all_r =  await client.get(f"{ERGAST_BASE_URL}/drivers/{driver_id}/results.json?limit=1000")
+                    poles_r = await client.get(f"{ERGAST_BASE_URL}/drivers/{driver_id}/qualifying/1.json?limit=1000")
+                    
+                    wins_r.raise_for_status()
+                    all_r.raise_for_status()
+                    poles_r.raise_for_status()
+                    
+                    wins_data = wins_r.json()["MRData"]["RaceTable"]
+                    all_races = all_r.json()["MRData"]["RaceTable"]["Races"]
+                    poles_data = poles_r.json()["MRData"]["RaceTable"]
+                    
+                    podiums = sum(1 for race in all_races for res in race["Results"] if int(res["position"]) <= 3)
+                    
+                    all_stats.append({
+                        "driver_id": driver_id,
+                        "name": name,
+                        "total_wins": int(wins_data["total"]),
+                        "total_podiums": podiums,
+                        "total_races": len(all_races),
+                        "total_poles": int(poles_data["total"])
+                    })
+                
+                return all_stats
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"Erreur API F1 (all driver stats): {e}")
+    
+    return await get_cached_data("drivers:all:stats", fetch, ttl=86400)
 
 @app.get("/driver/{driver_id}/stats")
 async def api_get_driver_stats(driver_id: str):

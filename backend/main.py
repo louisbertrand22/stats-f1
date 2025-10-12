@@ -185,11 +185,28 @@ async def api_get_last_race_results():
 @app.get("/driver/{driver_id}/stats")
 async def api_get_driver_stats(driver_id: str):
     if USE_MOCK_DATA:
-        # Exemple enrichi (tu peux brancher sur ton mock_data si tu veux)
+        # Career statistics updated with realistic 2024 F1 data
         mock_stats = {
-            "verstappen": {"driver_id": "verstappen", "total_wins": 53, "total_podiums": 98, "total_races": 175},
-            "hamilton":   {"driver_id": "hamilton",   "total_wins": 103, "total_podiums": 197, "total_races": 335},
-            "leclerc":    {"driver_id": "leclerc",    "total_wins": 5, "total_podiums": 30, "total_races": 120},
+            "verstappen": {"driver_id": "verstappen", "total_wins": 62, "total_podiums": 109, "total_races": 199},
+            "hamilton":   {"driver_id": "hamilton",   "total_wins": 105, "total_podiums": 201, "total_races": 350},
+            "leclerc":    {"driver_id": "leclerc",    "total_wins": 7, "total_podiums": 37, "total_races": 135},
+            "norris":     {"driver_id": "norris",     "total_wins": 4, "total_podiums": 23, "total_races": 118},
+            "piastri":    {"driver_id": "piastri",    "total_wins": 2, "total_podiums": 8, "total_races": 45},
+            "russell":    {"driver_id": "russell",    "total_wins": 3, "total_podiums": 13, "total_races": 87},
+            "alonso":     {"driver_id": "alonso",     "total_wins": 32, "total_podiums": 106, "total_races": 395},
+            "sainz_jr":   {"driver_id": "sainz_jr",   "total_wins": 4, "total_podiums": 25, "total_races": 201},
+            "tsunoda":    {"driver_id": "tsunoda",    "total_wins": 0, "total_podiums": 0, "total_races": 88},
+            "albon":      {"driver_id": "albon",      "total_wins": 0, "total_podiums": 2, "total_races": 91},
+            "gasly":      {"driver_id": "gasly",      "total_wins": 1, "total_podiums": 4, "total_races": 135},
+            "ocon":       {"driver_id": "ocon",       "total_wins": 1, "total_podiums": 3, "total_races": 143},
+            "stroll":     {"driver_id": "stroll",     "total_wins": 0, "total_podiums": 3, "total_races": 158},
+            "hulkenberg": {"driver_id": "hulkenberg", "total_wins": 0, "total_podiums": 0, "total_races": 215},
+            "antonelli":  {"driver_id": "antonelli",  "total_wins": 0, "total_podiums": 0, "total_races": 2},
+            "bearman":    {"driver_id": "bearman",    "total_wins": 0, "total_podiums": 0, "total_races": 5},
+            "lawson":     {"driver_id": "lawson",     "total_wins": 0, "total_podiums": 0, "total_races": 11},
+            "colapinto":  {"driver_id": "colapinto",  "total_wins": 0, "total_podiums": 0, "total_races": 9},
+            "hadjar":     {"driver_id": "hadjar",     "total_wins": 0, "total_podiums": 0, "total_races": 0},
+            "bortoleto":  {"driver_id": "bortoleto",  "total_wins": 0, "total_podiums": 0, "total_races": 0},
         }
         return mock_stats.get(driver_id, {"driver_id": driver_id, "total_wins": 0, "total_podiums": 0, "total_races": 0})
 

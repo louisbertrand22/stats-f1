@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getDriverStandings, getHealth, getLastRace, getSchedule } from "../api";
+import { getDriverStandings, getHealth, getRaceResult, getSchedule } from "../api";
 import Loader from "../components/Loader";
 import ErrorBanner from "../components/ErrorBanner";
 
@@ -13,19 +13,33 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const [s, h, lr, schedule] = await Promise.all([
+        const [s, h, schedule] = await Promise.all([
           getDriverStandings(), 
           getHealth(), 
-          getLastRace(),
           getSchedule()
         ]);
         setTop3((s || []).slice(0, 3));
         setHealth(h);
-        setLastRace(lr);
         
-        // Find next race (first race after today)
+        // Find last and next races from schedule
         if (schedule && schedule.length > 0) {
           const today = new Date();
+          
+          // Find the last completed race (most recent race before today)
+          const pastRaces = schedule.filter(race => new Date(race.date) < today);
+          if (pastRaces.length > 0) {
+            const lastCompletedRace = pastRaces[pastRaces.length - 1];
+            try {
+              const result = await getRaceResult(lastCompletedRace.season, lastCompletedRace.round);
+              if (result && result.Results) {
+                setLastRace(result);
+              }
+            } catch (e) {
+              // Results not available for this race
+            }
+          }
+          
+          // Find next race (first race after today)
           const upcoming = schedule.find(race => new Date(race.date) > today);
           setNextRace(upcoming || null);
         }

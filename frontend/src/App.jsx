@@ -7,6 +7,7 @@ import ConstructorsStandings from "./pages/ConstructorsStandings";
 import Schedule from "./pages/Schedule";
 import About from "./pages/About";
 import EasterEgg from "./pages/EasterEgg";
+import PilotStats from "./pages/PilotStats";
 import { API_URL } from "./api"; // <-- si tu as un api.js ; sinon supprime cette ligne
 
 export default function App() {
@@ -58,6 +59,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/standings/drivers" element={<DriversStandings />} />
                 <Route path="/standings/constructors" element={<ConstructorsStandings />} />
+                <Route path="/stats/pilots" element={<PilotStats />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/warp" element={<EasterEgg />} />

@@ -36,3 +36,8 @@ export const getHealth = async () => {
   const { data } = await api.get("/health");
   return data;
 };
+
+export const getAllDriverStats = async () => {
+  const { data } = await api.get("/drivers/stats");
+  return Array.isArray(data) ? data : [];
+};

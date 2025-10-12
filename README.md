@@ -9,7 +9,7 @@ Application **full-stack** qui affiche des statistiques F1 (pilotes, classements
 - **Frontend** : React + Vite, buildé en fichiers statiques et servi par **Nginx**.
 - **Backend** : **FastAPI** (Python) exposant des endpoints REST (health, drivers, standings…).
 - **Données** : **Mock data** (recommandé) avec statistiques précises fin 2024, ou API publique **Ergast F1** (discontinuée).
-- **Cache (optionnel)** : **Redis** pour éviter de solliciter l’API externe à chaque requête.
+- **Cache** : **Redis** (primaire) + **In-Memory cache** (fallback) pour éviter de solliciter l'API externe à chaque requête. Voir [CACHE.md](CACHE.md).
 - **CI/CD** : GitHub Actions (tests, lint, build images, scan Trivy, push vers GHCR, déploiement).
 - **Prod** : images Docker poussées sur **GitHub Container Registry (GHCR)** et services déployés sur **Railway**.
 
@@ -41,6 +41,7 @@ Base URL (prod) : `https://<TON_BACKEND>.up.railway.app`
 | GET     | `/schedule/current`              | Calendrier de la saison                     |
 | GET     | `/race/last`                     | Résultat de la dernière course              |
 | GET     | `/driver/{driver_id}/stats`      | Stats détaillées d’un pilote                |
+| GET     | `/cache/stats`                   | Statistiques du cache (monitoring)          |
 
 Exemples :
 ```bash

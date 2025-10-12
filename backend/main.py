@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import redis
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+from typing import Optional, Dict, Tuple
+import asyncio
 
 # Import mock data en alias pour éviter tout écrasement
 from mock_data import (
@@ -48,17 +50,84 @@ except Exception:
 ERGAST_BASE_URL = "https://ergast.com/api/f1"
 HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "20"))
 
-async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
-    """Récupère les données depuis Redis sinon via fetch_function(), puis met en cache."""
-    if redis_client:
-        cached = redis_client.get(key)
-        if cached:
-            return json.loads(cached)
+# ── In-memory cache fallback ──────────────────────────────────────────────────
+class InMemoryCache:
+    """Simple in-memory cache with TTL support as fallback when Redis is unavailable."""
+    
+    def __init__(self):
+        self._cache: Dict[str, Tuple[any, datetime]] = {}
+        self._lock = asyncio.Lock()
+        self._hits = 0
+        self._misses = 0
+    
+    async def get(self, key: str) -> Optional[any]:
+        """Get value from cache if not expired."""
+        async with self._lock:
+            if key in self._cache:
+                value, expiry = self._cache[key]
+                if datetime.now() < expiry:
+                    self._hits += 1
+                    return value
+                else:
+                    # Expired, remove it
+                    del self._cache[key]
+            self._misses += 1
+            return None
+    
+    async def set(self, key: str, value: any, ttl: int):
+        """Set value in cache with TTL in seconds."""
+        async with self._lock:
+            expiry = datetime.now() + timedelta(seconds=ttl)
+            self._cache[key] = (value, expiry)
+    
+    async def clear(self):
+        """Clear all cache entries."""
+        async with self._lock:
+            self._cache.clear()
+            self._hits = 0
+            self._misses = 0
+    
+    def get_stats(self) -> dict:
+        """Get cache statistics."""
+        total = self._hits + self._misses
+        hit_rate = (self._hits / total * 100) if total > 0 else 0
+        return {
+            "entries": len(self._cache),
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": f"{hit_rate:.2f}%"
+        }
 
+memory_cache = InMemoryCache()
+
+async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
+    """Récupère les données depuis Redis ou cache mémoire, sinon via fetch_function(), puis met en cache."""
+    # Try Redis first if available
+    if redis_client:
+        try:
+            cached = redis_client.get(key)
+            if cached:
+                return json.loads(cached)
+        except Exception as e:
+            print(f"⚠️  Redis error for key {key}: {e}")
+    
+    # Try in-memory cache as fallback
+    cached = await memory_cache.get(key)
+    if cached is not None:
+        return cached
+
+    # Fetch fresh data
     data = await fetch_function()
 
+    # Store in both Redis and memory cache
     if redis_client and data is not None:
-        redis_client.setex(key, ttl, json.dumps(data))
+        try:
+            redis_client.setex(key, ttl, json.dumps(data))
+        except Exception as e:
+            print(f"⚠️  Redis error storing key {key}: {e}")
+    
+    if data is not None:
+        await memory_cache.set(key, data, ttl)
 
     return data
 
@@ -80,6 +149,7 @@ async def root():
             "/race/{season}/{round}",
             "/drivers/stats",
             "/driver/{driver_id}/stats",
+            "/cache/stats",
         ],
     }
 
@@ -91,6 +161,30 @@ async def health_check():
         "mode": "mock" if USE_MOCK_DATA else "live",
         "timestamp": datetime.now().isoformat(),
     }
+
+@app.get("/cache/stats")
+async def cache_stats():
+    """Get cache statistics for monitoring."""
+    stats = {
+        "redis": {
+            "status": "connected" if redis_client else "disconnected"
+        },
+        "memory": memory_cache.get_stats()
+    }
+    
+    # Get Redis stats if available
+    if redis_client:
+        try:
+            info = redis_client.info("stats")
+            stats["redis"]["hits"] = info.get("keyspace_hits", 0)
+            stats["redis"]["misses"] = info.get("keyspace_misses", 0)
+            total = stats["redis"]["hits"] + stats["redis"]["misses"]
+            hit_rate = (stats["redis"]["hits"] / total * 100) if total > 0 else 0
+            stats["redis"]["hit_rate"] = f"{hit_rate:.2f}%"
+        except Exception as e:
+            stats["redis"]["error"] = str(e)
+    
+    return stats
 
 @app.get("/drivers/current")
 async def api_get_current_drivers():

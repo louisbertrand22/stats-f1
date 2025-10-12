@@ -63,6 +63,14 @@ export const translations = {
     
     // Common
     loadingData: "Chargement...",
+    
+    // Footer
+    footerDataProvided: "Données fournies par l'API Ergast F1",
+    footerFrontCalls: "Front appelle",
+    footerNotDefined: "N/D",
+    footerProjectDescription: "Projet DevOps - Apprentissage",
+    footerGitHub: "GitHub",
+    footerCopyright: "copyright 2025 - Tous droits réservés - Louis BERTRAND",
   },
   en: {
     // Header
@@ -128,6 +136,14 @@ export const translations = {
     
     // Common
     loadingData: "Loading...",
+    
+    // Footer
+    footerDataProvided: "Data provided by Ergast F1 API",
+    footerFrontCalls: "Frontend calls",
+    footerNotDefined: "N/A",
+    footerProjectDescription: "DevOps Learning Project",
+    footerGitHub: "GitHub",
+    footerCopyright: "copyright 2025 - All rights reserved - Louis BERTRAND",
   }
 };
 

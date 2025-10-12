@@ -13,6 +13,7 @@ export default function Navbar() {
       <NavLink to="/" className={item} end>Accueil</NavLink>
       <NavLink to="/standings/drivers" className={item}>Pilotes</NavLink>
       <NavLink to="/standings/constructors" className={item}>Constructeurs</NavLink>
+      <NavLink to="/stats/pilots" className={item}>Statistiques</NavLink>
       <NavLink to="/schedule" className={item}>Calendrier</NavLink>
       <NavLink to="/about" className={item}>À propos</NavLink>
       <NavLink to="/warp" className={item} title="👀">?</NavLink>

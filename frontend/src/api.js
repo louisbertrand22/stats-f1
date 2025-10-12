@@ -48,3 +48,8 @@ export const getRaceResult = async (season, round) => {
     throw error;
   }
 };
+
+export const getAllDriverStats = async () => {
+  const { data } = await api.get("/drivers/stats");
+  return Array.isArray(data) ? data : [];
+};

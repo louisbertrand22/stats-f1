@@ -218,3 +218,44 @@ def test_get_race_result_not_found():
     """Test d'un résultat de course inexistant"""
     response = client.get("/race/2025/99")
     assert response.status_code == 404
+
+def test_cache_stats():
+    """Test du endpoint de statistiques du cache"""
+    response = client.get("/cache/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert "redis" in data
+    assert "memory" in data
+    assert "status" in data["redis"]
+    assert "entries" in data["memory"]
+    assert "hits" in data["memory"]
+    assert "misses" in data["memory"]
+    assert "hit_rate" in data["memory"]
+
+def test_cache_functionality():
+    """Test que le cache fonctionne correctement - Note: avec USE_MOCK_DATA=true, le cache est contourné"""
+    # Même avec mock data, le cache stats endpoint devrait fonctionner
+    response1 = client.get("/drivers/current")
+    assert response1.status_code == 200
+    data1 = response1.json()
+    
+    # Deuxième requête - les données devraient être identiques
+    response2 = client.get("/drivers/current")
+    assert response2.status_code == 200
+    data2 = response2.json()
+    
+    # Les données devraient être identiques (cohérence)
+    assert data1 == data2
+    assert len(data1) > 0
+    
+    # Vérifier que le cache stats endpoint fonctionne
+    stats_response = client.get("/cache/stats")
+    assert stats_response.status_code == 200
+    stats = stats_response.json()
+    
+    # Vérifier la structure des stats (même si cache n'est pas utilisé en mode mock)
+    assert "memory" in stats
+    assert "redis" in stats
+    assert isinstance(stats["memory"]["entries"], int)
+    assert isinstance(stats["memory"]["hits"], int)
+    assert isinstance(stats["memory"]["misses"], int)

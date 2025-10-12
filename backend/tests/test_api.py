@@ -140,6 +140,27 @@ def test_driver_stats_unknown():
     assert data["total_wins"] == 0
     assert data["total_podiums"] == 0
 
+def test_get_all_driver_stats():
+    """Test de récupération des statistiques de tous les pilotes"""
+    response = client.get("/drivers/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+    # Vérifier la structure des données
+    for driver_stat in data:
+        assert "driver_id" in driver_stat
+        assert "name" in driver_stat
+        assert "total_wins" in driver_stat
+        assert "total_podiums" in driver_stat
+        assert "total_races" in driver_stat
+        assert "total_poles" in driver_stat
+    # Vérifier que Hamilton a les bonnes stats
+    hamilton = next((d for d in data if d["driver_id"] == "hamilton"), None)
+    assert hamilton is not None
+    assert hamilton["total_wins"] == 105
+    assert hamilton["total_poles"] == 104
+
 def test_invalid_endpoint():
     """Test d'un endpoint invalide"""
     response = client.get("/invalid/endpoint")

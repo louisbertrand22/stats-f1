@@ -37,6 +37,18 @@ export const getHealth = async () => {
   return data;
 };
 
+export const getRaceResult = async (season, round) => {
+  try {
+    const { data } = await api.get(`/race/${season}/${round}`);
+    return data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null; // Race results not available
+    }
+    throw error;
+  }
+};
+
 export const getAllDriverStats = async () => {
   const { data } = await api.get("/drivers/stats");
   return Array.isArray(data) ? data : [];

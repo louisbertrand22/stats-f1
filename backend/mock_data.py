@@ -544,3 +544,103 @@ def get_schedule_current():
 def get_last_race():
     """Dernière course (mock)."""
     return MOCK_LAST_RACE
+
+# ────────────────────────────────────────────────────────────────────────────────
+# RÉSULTATS DE COURSES PASSÉES (pour l'affichage du podium dans le calendrier)
+# ────────────────────────────────────────────────────────────────────────────────
+
+def _create_race_result(season, round_num, race_name, circuit_info, race_date, race_time, p1_id, p2_id, p3_id):
+    """Helper pour créer un résultat de course avec un podium."""
+    p1_driver, p1_ctor = _driver_in_standings(p1_id)
+    p2_driver, p2_ctor = _driver_in_standings(p2_id)
+    p3_driver, p3_ctor = _driver_in_standings(p3_id)
+    
+    return {
+        "season": season,
+        "round": round_num,
+        "raceName": race_name,
+        "Circuit": circuit_info,
+        "date": race_date,
+        "time": race_time,
+        "Results": [
+            {
+                "number": p1_driver.get("permanentNumber", "0"),
+                "position": "1",
+                "positionText": "1",
+                "points": "25",
+                "Driver": p1_driver,
+                "Constructor": p1_ctor,
+                "grid": "1",
+                "laps": "58",
+                "status": "Finished",
+                "Time": {"millis": "5400000", "time": "1:30:00.000"},
+            },
+            {
+                "number": p2_driver.get("permanentNumber", "0"),
+                "position": "2",
+                "positionText": "2",
+                "points": "18",
+                "Driver": p2_driver,
+                "Constructor": p2_ctor,
+                "grid": "2",
+                "laps": "58",
+                "status": "Finished",
+                "Time": {"millis": "5402500", "time": "+2.500"},
+            },
+            {
+                "number": p3_driver.get("permanentNumber", "0"),
+                "position": "3",
+                "positionText": "3",
+                "points": "15",
+                "Driver": p3_driver,
+                "Constructor": p3_ctor,
+                "grid": "3",
+                "laps": "58",
+                "status": "Finished",
+                "Time": {"millis": "5405000", "time": "+5.000"},
+            },
+        ],
+    }
+
+# Mock race results pour quelques courses passées (dates avant octobre 2025)
+MOCK_RACE_RESULTS = {
+    ("2025", "1"): _create_race_result(
+        "2025", "1", "Australian Grand Prix",
+        {"circuitId": "albert_park", "circuitName": "Albert Park Circuit",
+         "Location": {"lat": "-37.8497", "long": "144.968", "locality": "Melbourne", "country": "Australia"}},
+        "2025-03-16", "05:00:00Z",
+        "piastri", "norris", "verstappen"
+    ),
+    ("2025", "2"): _create_race_result(
+        "2025", "2", "Chinese Grand Prix",
+        {"circuitId": "shanghai", "circuitName": "Shanghai International Circuit",
+         "Location": {"lat": "31.3389", "long": "121.220", "locality": "Shanghai", "country": "China"}},
+        "2025-03-23", "07:00:00Z",
+        "verstappen", "piastri", "norris"
+    ),
+    ("2025", "3"): _create_race_result(
+        "2025", "3", "Japanese Grand Prix",
+        {"circuitId": "suzuka", "circuitName": "Suzuka Circuit",
+         "Location": {"lat": "34.8431", "long": "136.541", "locality": "Suzuka", "country": "Japan"}},
+        "2025-04-06", "06:00:00Z",
+        "norris", "verstappen", "russell"
+    ),
+    ("2025", "4"): _create_race_result(
+        "2025", "4", "Bahrain Grand Prix",
+        {"circuitId": "bahrain", "circuitName": "Bahrain International Circuit",
+         "Location": {"lat": "26.0325", "long": "50.5106", "locality": "Sakhir", "country": "Bahrain"}},
+        "2025-04-13", "15:00:00Z",
+        "piastri", "leclerc", "hamilton"
+    ),
+    ("2025", "5"): _create_race_result(
+        "2025", "5", "Saudi Arabian Grand Prix",
+        {"circuitId": "jeddah", "circuitName": "Jeddah Corniche Circuit",
+         "Location": {"lat": "21.6319", "long": "39.1044", "locality": "Jeddah", "country": "Saudi Arabia"}},
+        "2025-04-20", "17:00:00Z",
+        "verstappen", "norris", "piastri"
+    ),
+}
+
+def get_race_result(season: str, round_num: str):
+    """Récupère le résultat d'une course spécifique (mock)."""
+    return MOCK_RACE_RESULTS.get((season, round_num))

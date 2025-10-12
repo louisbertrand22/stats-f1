@@ -167,3 +167,24 @@ def test_standings_data_integrity():
         assert standing["position"] == str(i + 1)
         assert int(standing["points"]) >= 0
         assert int(standing["wins"]) >= 0
+
+def test_get_race_result():
+    """Test de récupération d'un résultat de course spécifique"""
+    response = client.get("/race/2025/1")
+    assert response.status_code == 200
+    data = response.json()
+    assert "raceName" in data
+    assert "Results" in data
+    assert len(data["Results"]) >= 3
+    assert data["season"] == "2025"
+    assert data["round"] == "1"
+    assert data["raceName"] == "Australian Grand Prix"
+    # Vérifier le podium
+    assert data["Results"][0]["position"] == "1"
+    assert data["Results"][1]["position"] == "2"
+    assert data["Results"][2]["position"] == "3"
+
+def test_get_race_result_not_found():
+    """Test d'un résultat de course inexistant"""
+    response = client.get("/race/2025/99")
+    assert response.status_code == 404

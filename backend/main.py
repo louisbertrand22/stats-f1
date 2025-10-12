@@ -14,6 +14,7 @@ from mock_data import (
     get_last_race as mock_get_last_race,
     get_constructors_current as mock_get_constructors_current,
     get_drivers_current as mock_get_drivers_current,
+    get_race_result as mock_get_race_result,
 )
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
@@ -76,6 +77,7 @@ async def root():
             "/standings/constructors",
             "/schedule/current",
             "/race/last",
+            "/race/{season}/{round}",
             "/driver/{driver_id}/stats",
         ],
     }
@@ -181,6 +183,32 @@ async def api_get_last_race_results():
         except httpx.HTTPError as e:
             raise HTTPException(status_code=502, detail=f"Erreur API F1 (last race): {e}")
     return await get_cached_data("race:last", fetch, ttl=1800)
+
+@app.get("/race/{season}/{round}")
+async def api_get_race_result(season: str, round: str):
+    """Get race results for a specific season and round."""
+    if USE_MOCK_DATA:
+        result = mock_get_race_result(season, round)
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Résultats non disponibles pour la course {season}/{round}")
+        return result
+
+    async def fetch():
+        try:
+            async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, headers={"User-Agent": "f1-dashboard/1.0"}) as client:
+                r = await client.get(f"{ERGAST_BASE_URL}/{season}/{round}/results.json")
+                r.raise_for_status()
+                races = r.json()["MRData"]["RaceTable"]["Races"]
+                if not races:
+                    return None
+                return races[0]
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"Erreur API F1 (race result): {e}")
+    
+    result = await get_cached_data(f"race:{season}:{round}", fetch, ttl=86400)
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Résultats non disponibles pour la course {season}/{round}")
+    return result
 
 @app.get("/driver/{driver_id}/stats")
 async def api_get_driver_stats(driver_id: str):

@@ -36,3 +36,15 @@ export const getHealth = async () => {
   const { data } = await api.get("/health");
   return data;
 };
+
+export const getRaceResult = async (season, round) => {
+  try {
+    const { data } = await api.get(`/race/${season}/${round}`);
+    return data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null; // Race results not available
+    }
+    throw error;
+  }
+};

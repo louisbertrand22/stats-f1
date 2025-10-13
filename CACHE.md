@@ -95,6 +95,11 @@ REDIS_RETRY_ATTEMPTS=5          # Number of connection retry attempts (default: 
 REDIS_RETRY_DELAY=1.0           # Initial delay between retries in seconds (default: 1.0)
                                 # Uses exponential backoff: 1s, 2s, 4s, 8s, 16s...
 
+# Logging Configuration
+LOG_LEVEL=INFO                  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+                                # Set to INFO (default) for production to reduce log spam
+                                # Set to DEBUG for detailed troubleshooting
+
 # Mock Data Mode (bypasses cache)
 USE_MOCK_DATA=true              # Use mock data instead of API calls
 ```
@@ -114,8 +119,9 @@ The backend implements robust Redis connection handling:
 2. **Automatic Reconnection**: The `/health` endpoint attempts to reconnect if Redis is disconnected
 3. **Graceful Degradation**: If Redis is unavailable, the application continues working with in-memory cache
 4. **Connection Verification**: Each health check pings Redis to verify the connection is still alive
+5. **Silent Reconnection**: Health endpoint reconnection attempts use DEBUG level logging to prevent log spam
 
-This ensures the dashboard will automatically reconnect to Redis if it becomes available after the backend starts.
+This ensures the dashboard will automatically reconnect to Redis if it becomes available after the backend starts, without flooding logs with connection error messages.
 
 ## Implementation Details
 

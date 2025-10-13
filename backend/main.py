@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import os
 from typing import Optional, Dict, Tuple
 import asyncio
+import logging
 
 # Import mock data en alias pour éviter tout écrasement
 from mock_data import (
@@ -20,6 +21,14 @@ from mock_data import (
 )
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
+
+# ── Logging ────────────────────────────────────────────────────────────────────
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
 # En prod, préfère définir FRONTEND_ORIGIN pour éviter le "*"
@@ -41,22 +50,35 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_RETRY_ATTEMPTS = int(os.getenv("REDIS_RETRY_ATTEMPTS", 5))
 REDIS_RETRY_DELAY = float(os.getenv("REDIS_RETRY_DELAY", 1.0))
 
-def connect_redis(retries: int = REDIS_RETRY_ATTEMPTS, delay: float = REDIS_RETRY_DELAY) -> Optional[redis.Redis]:
-    """Attempt to connect to Redis with retries and exponential backoff."""
+def connect_redis(retries: int = REDIS_RETRY_ATTEMPTS, delay: float = REDIS_RETRY_DELAY, silent: bool = False) -> Optional[redis.Redis]:
+    """Attempt to connect to Redis with retries and exponential backoff.
+    
+    Args:
+        retries: Number of retry attempts
+        delay: Initial delay between retries (exponential backoff applied)
+        silent: If True, only log at DEBUG level to reduce noise
+    """
     for attempt in range(retries):
         try:
             client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, socket_connect_timeout=5)
             client.ping()
-            print(f"✅ Redis connecté sur {REDIS_HOST}:{REDIS_PORT}")
+            if not silent:
+                logger.info(f"Redis connecté sur {REDIS_HOST}:{REDIS_PORT}")
             return client
         except Exception as e:
             if attempt < retries - 1:
                 wait_time = delay * (2 ** attempt)
-                print(f"⚠️  Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
+                if silent:
+                    logger.debug(f"Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
+                else:
+                    logger.warning(f"Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
                 import time
                 time.sleep(wait_time)
             else:
-                print(f"❌ Redis non disponible après {retries} tentatives - cache désactivé")
+                if silent:
+                    logger.debug(f"Redis non disponible après {retries} tentatives - cache désactivé")
+                else:
+                    logger.error(f"Redis non disponible après {retries} tentatives - cache désactivé")
     return None
 
 redis_client = connect_redis()
@@ -124,7 +146,7 @@ async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
             if cached:
                 return json.loads(cached)
         except Exception as e:
-            print(f"⚠️  Redis error for key {key}: {e}")
+            logger.warning(f"Redis error for key {key}: {e}")
     
     # Try in-memory cache as fallback
     cached = await memory_cache.get(key)
@@ -139,7 +161,7 @@ async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
         try:
             redis_client.setex(key, ttl, json.dumps(data))
         except Exception as e:
-            print(f"⚠️  Redis error storing key {key}: {e}")
+            logger.warning(f"Redis error storing key {key}: {e}")
     
     if data is not None:
         await memory_cache.set(key, data, ttl)
@@ -172,9 +194,9 @@ async def root():
 async def health_check():
     global redis_client
     
-    # Try to reconnect if Redis is disconnected
+    # Try to reconnect if Redis is disconnected, but silently to avoid log spam
     if redis_client is None:
-        redis_client = connect_redis(retries=1, delay=0.1)
+        redis_client = connect_redis(retries=1, delay=0.1, silent=True)
     
     # Verify connection is still alive
     redis_status = "disconnected"

@@ -20,15 +20,26 @@ The backend supports two modes:
    - Will fail or show outdated cached data
    - **Max Verstappen: 62 wins** (outdated)
 
+### Optional: LOG_LEVEL
+
+Control the logging verbosity of the backend:
+
+- Set `LOG_LEVEL=INFO` (default) for production - reduces log noise
+- Set `LOG_LEVEL=DEBUG` for troubleshooting - shows all logs including Redis reconnection attempts
+- Set `LOG_LEVEL=WARNING` for minimal logging - only warnings and errors
+
+**Recommended for production**: `LOG_LEVEL=INFO` to avoid hitting Railway's log rate limits.
+
 ### Railway Deployment
 
-To fix the production deployment showing incorrect data:
+To configure the production deployment:
 
 1. Go to your Railway project
 2. Navigate to Backend service → Variables tab
-3. Add environment variable:
+3. Add environment variables:
    ```
    USE_MOCK_DATA=true
+   LOG_LEVEL=INFO
    ```
 4. Redeploy the service
 

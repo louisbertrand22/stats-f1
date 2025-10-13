@@ -14,22 +14,47 @@ export default function Schedule() {
         const schedule = await getSchedule();
         setData(schedule);
         
-        // Fetch results for past races
+        // Fetch results for past races with controlled concurrency
         const today = new Date();
         const results = {};
         
-        for (const race of schedule) {
-          const raceDate = new Date(race.date);
-          if (raceDate < today) {
-            // Race has already happened, try to fetch results
-            try {
-              const result = await getRaceResult(race.season, race.round);
-              if (result && result.Results) {
-                results[`${race.season}-${race.round}`] = result.Results.slice(0, 3); // Get top 3
+        // Filter past races first
+        const pastRaces = schedule.filter(race => new Date(race.date) < today);
+        
+        // Batch requests to avoid overwhelming the browser/server
+        const BATCH_SIZE = 3; // Process 3 races at a time
+        
+        for (let i = 0; i < pastRaces.length; i += BATCH_SIZE) {
+          const batch = pastRaces.slice(i, i + BATCH_SIZE);
+          
+          // Process batch concurrently
+          const batchResults = await Promise.allSettled(
+            batch.map(async (race) => {
+              try {
+                const result = await getRaceResult(race.season, race.round);
+                if (result && result.Results) {
+                  return {
+                    key: `${race.season}-${race.round}`,
+                    data: result.Results.slice(0, 3) // Get top 3
+                  };
+                }
+              } catch (e) {
+                // Results not available for this race, skip silently
               }
-            } catch (e) {
-              // Results not available for this race, skip silently
+              return null;
+            })
+          );
+          
+          // Store successful results
+          batchResults.forEach(({ status, value }) => {
+            if (status === 'fulfilled' && value) {
+              results[value.key] = value.data;
             }
+          });
+          
+          // Small delay between batches to prevent overwhelming the server
+          if (i + BATCH_SIZE < pastRaces.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
         

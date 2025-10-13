@@ -38,13 +38,28 @@ USE_MOCK_DATA = os.getenv("USE_MOCK_DATA", "true").strip().lower() in {"1", "tru
 # ── Redis cache ───────────────────────────────────────────────────────────────
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_RETRY_ATTEMPTS = int(os.getenv("REDIS_RETRY_ATTEMPTS", 5))
+REDIS_RETRY_DELAY = float(os.getenv("REDIS_RETRY_DELAY", 1.0))
 
-try:
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
-    redis_client.ping()
-except Exception:
-    redis_client = None
-    print("⚠️  Redis non disponible - cache désactivé")
+def connect_redis(retries: int = REDIS_RETRY_ATTEMPTS, delay: float = REDIS_RETRY_DELAY) -> Optional[redis.Redis]:
+    """Attempt to connect to Redis with retries and exponential backoff."""
+    for attempt in range(retries):
+        try:
+            client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, socket_connect_timeout=5)
+            client.ping()
+            print(f"✅ Redis connecté sur {REDIS_HOST}:{REDIS_PORT}")
+            return client
+        except Exception as e:
+            if attempt < retries - 1:
+                wait_time = delay * (2 ** attempt)
+                print(f"⚠️  Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
+                import time
+                time.sleep(wait_time)
+            else:
+                print(f"❌ Redis non disponible après {retries} tentatives - cache désactivé")
+    return None
+
+redis_client = connect_redis()
 
 # ── Ergast API ────────────────────────────────────────────────────────────────
 ERGAST_BASE_URL = "https://ergast.com/api/f1"
@@ -155,9 +170,25 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    global redis_client
+    
+    # Try to reconnect if Redis is disconnected
+    if redis_client is None:
+        redis_client = connect_redis(retries=1, delay=0.1)
+    
+    # Verify connection is still alive
+    redis_status = "disconnected"
+    if redis_client:
+        try:
+            redis_client.ping()
+            redis_status = "connected"
+        except Exception:
+            redis_client = None
+            redis_status = "disconnected"
+    
     return {
         "status": "healthy",
-        "redis": "connected" if redis_client else "disconnected",
+        "redis": redis_status,
         "mode": "mock" if USE_MOCK_DATA else "live",
         "timestamp": datetime.now().isoformat(),
     }

@@ -30,9 +30,10 @@ def test_health_check():
     data = response.json()
     assert data["status"] == "healthy"
     assert "timestamp" in data
-    assert "redis" in data
+    assert "cache" in data
     assert "mode" in data
     assert data["mode"] == "mock"
+    assert data["cache"]["status"] == "active"
 
 def test_get_current_drivers():
     """Test de récupération des pilotes actuels"""
@@ -224,13 +225,14 @@ def test_cache_stats():
     response = client.get("/cache/stats")
     assert response.status_code == 200
     data = response.json()
-    assert "redis" in data
-    assert "memory" in data
-    assert "status" in data["redis"]
-    assert "entries" in data["memory"]
-    assert "hits" in data["memory"]
-    assert "misses" in data["memory"]
-    assert "hit_rate" in data["memory"]
+    assert "cache" in data
+    assert "status" in data
+    assert data["status"] == "active"
+    assert "entries" in data["cache"]
+    assert "hits" in data["cache"]
+    assert "misses" in data["cache"]
+    assert "hit_rate" in data["cache"]
+    assert "persistence" in data["cache"]
 
 def test_cache_functionality():
     """Test que le cache fonctionne correctement - Note: avec USE_MOCK_DATA=true, le cache est contourné"""
@@ -254,11 +256,11 @@ def test_cache_functionality():
     stats = stats_response.json()
     
     # Vérifier la structure des stats (même si cache n'est pas utilisé en mode mock)
-    assert "memory" in stats
-    assert "redis" in stats
-    assert isinstance(stats["memory"]["entries"], int)
-    assert isinstance(stats["memory"]["hits"], int)
-    assert isinstance(stats["memory"]["misses"], int)
+    assert "cache" in stats
+    assert "status" in stats
+    assert isinstance(stats["cache"]["entries"], int)
+    assert isinstance(stats["cache"]["hits"], int)
+    assert isinstance(stats["cache"]["misses"], int)
 
 def test_health_check_multiple_calls():
     """Test que plusieurs appels à /health ne génèrent pas de logs excessifs"""
@@ -269,6 +271,5 @@ def test_health_check_multiple_calls():
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert "redis" in data
-        # Redis sera disconnected dans les tests car il n'y a pas de serveur Redis en cours d'exécution
-        assert data["redis"] in ["connected", "disconnected"]
+        assert "cache" in data
+        assert data["cache"]["status"] == "active"

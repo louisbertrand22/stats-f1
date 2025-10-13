@@ -2,40 +2,34 @@
 
 ## Overview
 
-The F1 Dashboard API implements a **two-tier caching system** to minimize API calls and improve performance:
+The F1 Dashboard API implements a **custom caching system** to minimize API calls and improve performance:
 
-1. **Redis Cache (Primary)** - Persistent cache shared across instances
-2. **In-Memory Cache (Fallback)** - Local cache when Redis is unavailable
+1. **CustomCache** - In-memory cache with optional file-based persistence
 
 ## Architecture
 
 ```
-Request → Check Redis → Check Memory Cache → Fetch from API → Store in both caches
+Request → Check Custom Cache → Fetch from API → Store in Custom Cache
 ```
 
 ### Cache Strategy
 
-- **Redis First**: If Redis is available, it's checked first for cached data
-- **Memory Fallback**: If Redis is unavailable or fails, in-memory cache is used
-- **Graceful Degradation**: If both caches miss, data is fetched fresh from the API
-- **Dual Storage**: Fresh data is stored in both Redis and memory for redundancy
+- **Single-Tier Design**: Simplified architecture with one cache layer
+- **Optional Persistence**: Cache data can be persisted to disk for durability across restarts
+- **Thread-Safe**: Uses asyncio locks for concurrent access
+- **Automatic Expiration**: TTL-based expiration removes stale data automatically
 
 ## Features
 
-### ✅ In-Memory Cache
+### ✅ CustomCache
 
 - **TTL Support**: Automatic expiration of cached entries
 - **Thread-Safe**: Uses asyncio locks for concurrent access
-- **Statistics Tracking**: Monitors hits, misses, and hit rate
-- **No External Dependencies**: Works even when Redis is unavailable
-
-### ✅ Redis Cache
-
-- **Persistent Storage**: Survives application restarts
-- **Shared Across Instances**: Multiple backend instances share the same cache
-- **Error Handling**: Gracefully handles connection failures
-- **Connection Retry**: Automatic retry with exponential backoff (5 attempts by default)
-- **Auto-Reconnection**: Health endpoint attempts to reconnect if Redis becomes available
+- **Statistics Tracking**: Monitors hits, misses, hit rate, and persistence status
+- **No External Dependencies**: No need for Redis or other external services
+- **Optional Persistence**: File-based persistence for cache durability across restarts
+- **Automatic Cleanup**: Expired entries are automatically removed on access
+- **Simple Configuration**: Easy to configure via environment variables
 
 ## Cache TTLs
 
@@ -61,17 +55,13 @@ Access cache statistics at `/cache/stats`:
 
 ```json
 {
-  "redis": {
-    "status": "connected",
-    "hits": 150,
-    "misses": 25,
-    "hit_rate": "85.71%"
-  },
-  "memory": {
+  "status": "active",
+  "cache": {
     "entries": 12,
     "hits": 89,
     "misses": 23,
-    "hit_rate": "79.46%"
+    "hit_rate": "79.46%",
+    "persistence": "enabled"
   }
 }
 ```
@@ -82,26 +72,25 @@ Access cache statistics at `/cache/stats`:
 - **hits**: Number of cache hits (data found in cache)
 - **misses**: Number of cache misses (data not in cache)
 - **hit_rate**: Percentage of requests served from cache
+- **persistence**: Whether file-based persistence is enabled or disabled
 
 ## Configuration
 
 ### Environment Variables
 
 ```bash
-# Redis Configuration
-REDIS_HOST=redis                # Redis server hostname
-REDIS_PORT=6379                 # Redis server port
-REDIS_RETRY_ATTEMPTS=5          # Number of connection retry attempts (default: 5)
-REDIS_RETRY_DELAY=1.0           # Initial delay between retries in seconds (default: 1.0)
-                                # Uses exponential backoff: 1s, 2s, 4s, 8s, 16s...
+# Cache Configuration
+CACHE_DIR=/tmp/f1_cache          # Directory for cache persistence (default: /tmp/f1_cache)
+CACHE_PERSIST=true               # Enable file-based persistence (default: true)
+                                 # Set to false for in-memory only caching
 
 # Logging Configuration
-LOG_LEVEL=INFO                  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-                                # Set to INFO (default) for production to reduce log spam
-                                # Set to DEBUG for detailed troubleshooting
+LOG_LEVEL=INFO                   # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+                                 # Set to INFO (default) for production to reduce log spam
+                                 # Set to DEBUG for detailed troubleshooting
 
 # Mock Data Mode (bypasses cache)
-USE_MOCK_DATA=true              # Use mock data instead of API calls
+USE_MOCK_DATA=true               # Use mock data instead of API calls
 ```
 
 ### When Mock Mode is Enabled
@@ -111,58 +100,56 @@ When `USE_MOCK_DATA=true`, the application returns mock data directly without us
 - No need for caching layer overhead
 - Useful for development and testing
 
-### Redis Connection Resilience
+### Cache Persistence
 
-The backend implements robust Redis connection handling:
+The custom cache supports optional file-based persistence:
 
-1. **Initial Connection**: On startup, attempts to connect to Redis with configurable retries and exponential backoff
-2. **Automatic Reconnection**: The `/health` endpoint attempts to reconnect if Redis is disconnected
-3. **Graceful Degradation**: If Redis is unavailable, the application continues working with in-memory cache
-4. **Connection Verification**: Each health check pings Redis to verify the connection is still alive
-5. **Silent Reconnection**: Health endpoint reconnection attempts use DEBUG level logging to prevent log spam
+1. **Enabled by Default**: `CACHE_PERSIST=true` enables persistence to disk
+2. **Automatic Save**: Cache is saved to disk on every write operation
+3. **Automatic Load**: Cache is loaded from disk on startup
+4. **Expired Entry Cleanup**: Expired entries are removed when loading from disk
+5. **Graceful Degradation**: If persistence fails, the cache continues working in-memory only
 
-This ensures the dashboard will automatically reconnect to Redis if it becomes available after the backend starts, without flooding logs with connection error messages.
+This ensures cached data survives application restarts while maintaining simplicity and reliability.
 
 ## Implementation Details
 
-### InMemoryCache Class
+### CustomCache Class
 
-Located in `backend/main.py`, the `InMemoryCache` class provides:
+Located in `backend/main.py`, the `CustomCache` class provides:
 
 ```python
-class InMemoryCache:
+class CustomCache:
     async def get(key: str) -> Optional[any]
     async def set(key: str, value: any, ttl: int)
     async def clear()
     def get_stats() -> dict
 ```
 
+Key features:
+- **In-memory storage**: Fast access using Python dictionaries
+- **TTL management**: Automatic expiration based on timestamps
+- **File persistence**: Optional pickle-based storage to disk
+- **Thread-safe**: Asyncio locks prevent race conditions
+- **Statistics tracking**: Monitors cache hits, misses, and hit rate
+
 ### get_cached_data Function
 
-The `get_cached_data()` function implements the caching strategy:
+The `get_cached_data()` function implements the simplified caching strategy:
 
 ```python
 async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
-    # 1. Try Redis cache
-    if redis_client:
-        cached = redis_client.get(key)
-        if cached:
-            return json.loads(cached)
-    
-    # 2. Try memory cache
-    cached = await memory_cache.get(key)
+    # 1. Try custom cache
+    cached = await custom_cache.get(key)
     if cached is not None:
         return cached
     
-    # 3. Fetch fresh data
+    # 2. Fetch fresh data
     data = await fetch_function()
     
-    # 4. Store in both caches
-    if redis_client and data is not None:
-        redis_client.setex(key, ttl, json.dumps(data))
-    
+    # 3. Store in cache
     if data is not None:
-        await memory_cache.set(key, data, ttl)
+        await custom_cache.set(key, data, ttl)
     
     return data
 ```
@@ -171,9 +158,12 @@ async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
 
 1. **Reduced API Load**: Fewer calls to external APIs (Ergast F1 API)
 2. **Better Performance**: Faster response times from cached data
-3. **High Availability**: Works even when Redis is down (memory fallback)
-4. **Cost Savings**: Reduced bandwidth and API quota usage
-5. **Improved UX**: Faster page loads for users
+3. **No External Dependencies**: No need for Redis or other external services
+4. **Simplified Architecture**: Single cache layer is easier to maintain and understand
+5. **Cost Savings**: Reduced bandwidth and API quota usage
+6. **Improved UX**: Faster page loads for users
+7. **Easy Deployment**: No need to manage separate cache servers
+8. **Optional Persistence**: Cache survives restarts when persistence is enabled
 
 ## Testing
 
@@ -191,6 +181,7 @@ Potential enhancements:
 - [ ] Cache warming on startup
 - [ ] Cache invalidation API endpoint
 - [ ] Configurable TTL per endpoint via environment variables
-- [ ] Cache size limits for memory cache
-- [ ] Distributed cache with Redis Cluster
+- [ ] Cache size limits with LRU eviction policy
+- [ ] Alternative persistence backends (SQLite, etc.)
 - [ ] Cache metrics export to monitoring systems (Prometheus, etc.)
+- [ ] Compression for persisted cache data

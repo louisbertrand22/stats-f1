@@ -1,13 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
-import redis
 import json
 from datetime import datetime, timedelta
 import os
 from typing import Optional, Dict, Tuple
 import asyncio
 import logging
+import pickle
+from pathlib import Path
 
 # Import mock data en alias pour éviter tout écrasement
 from mock_data import (
@@ -44,58 +45,77 @@ app.add_middleware(
 # ── Mode mock/live ────────────────────────────────────────────────────────────
 USE_MOCK_DATA = os.getenv("USE_MOCK_DATA", "true").strip().lower() in {"1", "true", "yes", "on"}
 
-# ── Redis cache ───────────────────────────────────────────────────────────────
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_RETRY_ATTEMPTS = int(os.getenv("REDIS_RETRY_ATTEMPTS", 5))
-REDIS_RETRY_DELAY = float(os.getenv("REDIS_RETRY_DELAY", 1.0))
-
-def connect_redis(retries: int = REDIS_RETRY_ATTEMPTS, delay: float = REDIS_RETRY_DELAY, silent: bool = False) -> Optional[redis.Redis]:
-    """Attempt to connect to Redis with retries and exponential backoff.
-    
-    Args:
-        retries: Number of retry attempts
-        delay: Initial delay between retries (exponential backoff applied)
-        silent: If True, only log at DEBUG level to reduce noise
-    """
-    for attempt in range(retries):
-        try:
-            client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, socket_connect_timeout=5)
-            client.ping()
-            if not silent:
-                logger.info(f"Redis connecté sur {REDIS_HOST}:{REDIS_PORT}")
-            return client
-        except Exception as e:
-            if attempt < retries - 1:
-                wait_time = delay * (2 ** attempt)
-                if silent:
-                    logger.debug(f"Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
-                else:
-                    logger.warning(f"Tentative Redis {attempt + 1}/{retries} échouée, nouvelle tentative dans {wait_time:.1f}s...")
-                import time
-                time.sleep(wait_time)
-            else:
-                if silent:
-                    logger.debug(f"Redis non disponible après {retries} tentatives - cache désactivé")
-                else:
-                    logger.error(f"Redis non disponible après {retries} tentatives - cache désactivé")
-    return None
-
-redis_client = connect_redis()
+# ── Cache configuration ───────────────────────────────────────────────────────
+CACHE_DIR = os.getenv("CACHE_DIR", "/tmp/f1_cache")
+CACHE_PERSIST = os.getenv("CACHE_PERSIST", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 # ── Ergast API ────────────────────────────────────────────────────────────────
 ERGAST_BASE_URL = "https://ergast.com/api/f1"
 HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "20"))
 
-# ── In-memory cache fallback ──────────────────────────────────────────────────
-class InMemoryCache:
-    """Simple in-memory cache with TTL support as fallback when Redis is unavailable."""
+# ── Custom Cache Implementation ───────────────────────────────────────────────
+class CustomCache:
+    """Custom cache with TTL support and optional file-based persistence.
     
-    def __init__(self):
+    Features:
+    - In-memory caching with automatic TTL expiration
+    - Optional file-based persistence for cache durability across restarts
+    - Thread-safe operations using asyncio locks
+    - Statistics tracking (hits, misses, hit rate)
+    """
+    
+    def __init__(self, cache_dir: str = CACHE_DIR, persist: bool = CACHE_PERSIST):
         self._cache: Dict[str, Tuple[any, datetime]] = {}
         self._lock = asyncio.Lock()
         self._hits = 0
         self._misses = 0
+        self._persist = persist
+        self._cache_dir = Path(cache_dir)
+        
+        # Create cache directory if persistence is enabled
+        if self._persist:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            self._load_cache()
+            logger.info(f"Custom cache initialized with persistence at {self._cache_dir}")
+        else:
+            logger.info("Custom cache initialized (in-memory only)")
+    
+    def _get_cache_file_path(self) -> Path:
+        """Get the path to the cache persistence file."""
+        return self._cache_dir / "cache_data.pkl"
+    
+    def _load_cache(self):
+        """Load cache from disk if persistence is enabled."""
+        if not self._persist:
+            return
+        
+        cache_file = self._get_cache_file_path()
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'rb') as f:
+                    data = pickle.load(f)
+                    self._cache = data.get('cache', {})
+                    # Clean expired entries on load
+                    now = datetime.now()
+                    expired_keys = [k for k, (_, expiry) in self._cache.items() if now >= expiry]
+                    for key in expired_keys:
+                        del self._cache[key]
+                    logger.info(f"Loaded {len(self._cache)} cache entries from disk (removed {len(expired_keys)} expired)")
+            except Exception as e:
+                logger.warning(f"Failed to load cache from disk: {e}")
+                self._cache = {}
+    
+    def _save_cache(self):
+        """Save cache to disk if persistence is enabled."""
+        if not self._persist:
+            return
+        
+        try:
+            cache_file = self._get_cache_file_path()
+            with open(cache_file, 'wb') as f:
+                pickle.dump({'cache': self._cache}, f)
+        except Exception as e:
+            logger.warning(f"Failed to save cache to disk: {e}")
     
     async def get(self, key: str) -> Optional[any]:
         """Get value from cache if not expired."""
@@ -108,6 +128,7 @@ class InMemoryCache:
                 else:
                     # Expired, remove it
                     del self._cache[key]
+                    self._save_cache()
             self._misses += 1
             return None
     
@@ -116,6 +137,7 @@ class InMemoryCache:
         async with self._lock:
             expiry = datetime.now() + timedelta(seconds=ttl)
             self._cache[key] = (value, expiry)
+            self._save_cache()
     
     async def clear(self):
         """Clear all cache entries."""
@@ -123,6 +145,7 @@ class InMemoryCache:
             self._cache.clear()
             self._hits = 0
             self._misses = 0
+            self._save_cache()
     
     def get_stats(self) -> dict:
         """Get cache statistics."""
@@ -132,39 +155,26 @@ class InMemoryCache:
             "entries": len(self._cache),
             "hits": self._hits,
             "misses": self._misses,
-            "hit_rate": f"{hit_rate:.2f}%"
+            "hit_rate": f"{hit_rate:.2f}%",
+            "persistence": "enabled" if self._persist else "disabled"
         }
 
-memory_cache = InMemoryCache()
+# Initialize the custom cache
+custom_cache = CustomCache()
 
 async def get_cached_data(key: str, fetch_function, ttl: int = 3600):
-    """Récupère les données depuis Redis ou cache mémoire, sinon via fetch_function(), puis met en cache."""
-    # Try Redis first if available
-    if redis_client:
-        try:
-            cached = redis_client.get(key)
-            if cached:
-                return json.loads(cached)
-        except Exception as e:
-            logger.warning(f"Redis error for key {key}: {e}")
-    
-    # Try in-memory cache as fallback
-    cached = await memory_cache.get(key)
+    """Récupère les données depuis le cache custom, sinon via fetch_function(), puis met en cache."""
+    # Try custom cache
+    cached = await custom_cache.get(key)
     if cached is not None:
         return cached
 
     # Fetch fresh data
     data = await fetch_function()
-
-    # Store in both Redis and memory cache
-    if redis_client and data is not None:
-        try:
-            redis_client.setex(key, ttl, json.dumps(data))
-        except Exception as e:
-            logger.warning(f"Redis error storing key {key}: {e}")
     
+    # Store in cache
     if data is not None:
-        await memory_cache.set(key, data, ttl)
+        await custom_cache.set(key, data, ttl)
 
     return data
 
@@ -192,25 +202,15 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    global redis_client
-    
-    # Try to reconnect if Redis is disconnected, but silently to avoid log spam
-    if redis_client is None:
-        redis_client = connect_redis(retries=1, delay=0.1, silent=True)
-    
-    # Verify connection is still alive
-    redis_status = "disconnected"
-    if redis_client:
-        try:
-            redis_client.ping()
-            redis_status = "connected"
-        except Exception:
-            redis_client = None
-            redis_status = "disconnected"
+    cache_stats = custom_cache.get_stats()
     
     return {
         "status": "healthy",
-        "redis": redis_status,
+        "cache": {
+            "status": "active",
+            "entries": cache_stats["entries"],
+            "persistence": cache_stats["persistence"]
+        },
         "mode": "mock" if USE_MOCK_DATA else "live",
         "timestamp": datetime.now().isoformat(),
     }
@@ -218,26 +218,10 @@ async def health_check():
 @app.get("/cache/stats")
 async def cache_stats():
     """Get cache statistics for monitoring."""
-    stats = {
-        "redis": {
-            "status": "connected" if redis_client else "disconnected"
-        },
-        "memory": memory_cache.get_stats()
+    return {
+        "cache": custom_cache.get_stats(),
+        "status": "active"
     }
-    
-    # Get Redis stats if available
-    if redis_client:
-        try:
-            info = redis_client.info("stats")
-            stats["redis"]["hits"] = info.get("keyspace_hits", 0)
-            stats["redis"]["misses"] = info.get("keyspace_misses", 0)
-            total = stats["redis"]["hits"] + stats["redis"]["misses"]
-            hit_rate = (stats["redis"]["hits"] / total * 100) if total > 0 else 0
-            stats["redis"]["hit_rate"] = f"{hit_rate:.2f}%"
-        except Exception as e:
-            stats["redis"]["error"] = str(e)
-    
-    return stats
 
 @app.get("/drivers/current")
 async def api_get_current_drivers():

@@ -34,6 +34,8 @@ Request → Check Redis → Check Memory Cache → Fetch from API → Store in b
 - **Persistent Storage**: Survives application restarts
 - **Shared Across Instances**: Multiple backend instances share the same cache
 - **Error Handling**: Gracefully handles connection failures
+- **Connection Retry**: Automatic retry with exponential backoff (5 attempts by default)
+- **Auto-Reconnection**: Health endpoint attempts to reconnect if Redis becomes available
 
 ## Cache TTLs
 
@@ -87,11 +89,14 @@ Access cache statistics at `/cache/stats`:
 
 ```bash
 # Redis Configuration
-REDIS_HOST=redis          # Redis server hostname
-REDIS_PORT=6379          # Redis server port
+REDIS_HOST=redis                # Redis server hostname
+REDIS_PORT=6379                 # Redis server port
+REDIS_RETRY_ATTEMPTS=5          # Number of connection retry attempts (default: 5)
+REDIS_RETRY_DELAY=1.0           # Initial delay between retries in seconds (default: 1.0)
+                                # Uses exponential backoff: 1s, 2s, 4s, 8s, 16s...
 
 # Mock Data Mode (bypasses cache)
-USE_MOCK_DATA=true       # Use mock data instead of API calls
+USE_MOCK_DATA=true              # Use mock data instead of API calls
 ```
 
 ### When Mock Mode is Enabled
@@ -100,6 +105,17 @@ When `USE_MOCK_DATA=true`, the application returns mock data directly without us
 - Mock data is already fast (no network calls)
 - No need for caching layer overhead
 - Useful for development and testing
+
+### Redis Connection Resilience
+
+The backend implements robust Redis connection handling:
+
+1. **Initial Connection**: On startup, attempts to connect to Redis with configurable retries and exponential backoff
+2. **Automatic Reconnection**: The `/health` endpoint attempts to reconnect if Redis is disconnected
+3. **Graceful Degradation**: If Redis is unavailable, the application continues working with in-memory cache
+4. **Connection Verification**: Each health check pings Redis to verify the connection is still alive
+
+This ensures the dashboard will automatically reconnect to Redis if it becomes available after the backend starts.
 
 ## Implementation Details
 

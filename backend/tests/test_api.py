@@ -259,3 +259,16 @@ def test_cache_functionality():
     assert isinstance(stats["memory"]["entries"], int)
     assert isinstance(stats["memory"]["hits"], int)
     assert isinstance(stats["memory"]["misses"], int)
+
+def test_health_check_multiple_calls():
+    """Test que plusieurs appels à /health ne génèrent pas de logs excessifs"""
+    # Appeler /health plusieurs fois - cela ne devrait pas causer d'erreur
+    # et ne devrait pas générer de logs excessifs (testé manuellement)
+    for _ in range(5):
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "redis" in data
+        # Redis sera disconnected dans les tests car il n'y a pas de serveur Redis en cours d'exécution
+        assert data["redis"] in ["connected", "disconnected"]

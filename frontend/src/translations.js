@@ -36,6 +36,27 @@ export const translations = {
     architectureText: "Pas de proxy /api — le frontend appelle directement",
     apiUrl: "l'URL de l'API",
     
+    // Technologies descriptions
+    fastapiDesc: "framework web moderne et performant",
+    uvicornDesc: "serveur ASGI pour FastAPI",
+    redisDesc: "cache en mémoire (optionnel)",
+    httpxDesc: "client HTTP pour appeler l'API Ergast F1",
+    pydanticDesc: "validation de données",
+    react18Desc: "bibliothèque UI moderne",
+    viteDesc: "outil de build ultra-rapide",
+    reactRouterDesc: "navigation entre pages",
+    axiosDesc: "client HTTP pour l'API",
+    tailwindDesc: "framework CSS utility-first",
+    nginxDesc: "serveur web pour les fichiers statiques",
+    
+    // DevOps descriptions
+    dockerDesc: "conteneurisation avec multi-stage builds",
+    dockerComposeDesc: "orchestration locale des services",
+    githubActionsDesc: "CI/CD (tests, lint, build, déploiement)",
+    trivyDesc: "scan de sécurité des images Docker",
+    ghcrDesc: "GitHub Container Registry pour les images",
+    railwayDesc: "hébergement des services en production",
+    
     // Driver Standings
     driversStandings: "Classement des Pilotes",
     position: "Position",
@@ -133,6 +154,27 @@ export const translations = {
     architectureNote: "Architecture note:",
     architectureText: "No /api proxy — the frontend calls directly",
     apiUrl: "the API URL",
+    
+    // Technologies descriptions
+    fastapiDesc: "modern and performant web framework",
+    uvicornDesc: "ASGI server for FastAPI",
+    redisDesc: "in-memory cache (optional)",
+    httpxDesc: "HTTP client to call the Ergast F1 API",
+    pydanticDesc: "data validation",
+    react18Desc: "modern UI library",
+    viteDesc: "ultra-fast build tool",
+    reactRouterDesc: "page navigation",
+    axiosDesc: "HTTP client for the API",
+    tailwindDesc: "utility-first CSS framework",
+    nginxDesc: "web server for static files",
+    
+    // DevOps descriptions
+    dockerDesc: "containerization with multi-stage builds",
+    dockerComposeDesc: "local service orchestration",
+    githubActionsDesc: "CI/CD (tests, lint, build, deployment)",
+    trivyDesc: "security scanning of Docker images",
+    ghcrDesc: "GitHub Container Registry for images",
+    railwayDesc: "production service hosting",
     
     // Driver Standings
     driversStandings: "Drivers Standings",

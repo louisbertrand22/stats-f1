@@ -54,15 +54,40 @@ export const translations = {
     circuit: "Circuit",
     location: "Lieu",
     date: "Date",
+    scheduleTitle: "Calendrier de la saison",
+    loadingSchedule: "Chargement du calendrier...",
     
     // Pilot Stats
     pilotStats: "Statistiques des Pilotes",
     nationality: "Nationalité",
     permanentNumber: "Numéro permanent",
     code: "Code",
+    sortBy: "Trier par:",
+    minimum: "Minimum:",
+    reset: "Réinitialiser",
+    loadingStats: "Chargement des statistiques...",
+    poles: "Pole Positions",
+    podiums: "Podiums",
+    races: "Courses",
+    noDrivers: "Aucun pilote ne correspond aux critères de filtrage.",
+    
+    // Drivers/Constructors Standings
+    loadingDrivers: "Classement pilotes...",
+    loadingConstructors: "Classement constructeurs...",
+    pos: "Pos",
+    team: "Écurie",
+    error: "Erreur",
+    
+    // Easter Egg
+    easterEggTitle: "Easter Egg",
+    easterEggPrompt: "Tape le",
+    maxCode: "Max Code",
+    easterEggSuffix: "sur ton clavier 🎮",
+    boostActivated: "Boost activé ! Vroum vroum 🏎️💨",
     
     // Common
     loadingData: "Chargement...",
+    defaultLoading: "Chargement...",
     
     // Footer
     footerDataProvided: "Données fournies par l'API Ergast F1",
@@ -127,15 +152,40 @@ export const translations = {
     circuit: "Circuit",
     location: "Location",
     date: "Date",
+    scheduleTitle: "Season Schedule",
+    loadingSchedule: "Loading schedule...",
     
     // Pilot Stats
     pilotStats: "Driver Statistics",
     nationality: "Nationality",
     permanentNumber: "Permanent Number",
     code: "Code",
+    sortBy: "Sort by:",
+    minimum: "Minimum:",
+    reset: "Reset",
+    loadingStats: "Loading statistics...",
+    poles: "Pole Positions",
+    podiums: "Podiums",
+    races: "Races",
+    noDrivers: "No drivers match the filtering criteria.",
+    
+    // Drivers/Constructors Standings
+    loadingDrivers: "Loading drivers standings...",
+    loadingConstructors: "Loading constructors standings...",
+    pos: "Pos",
+    team: "Team",
+    error: "Error",
+    
+    // Easter Egg
+    easterEggTitle: "Easter Egg",
+    easterEggPrompt: "Type the",
+    maxCode: "Max Code",
+    easterEggSuffix: "on your keyboard 🎮",
+    boostActivated: "Boost activated! Vroom vroom 🏎️💨",
     
     // Common
     loadingData: "Loading...",
+    defaultLoading: "Loading...",
     
     // Footer
     footerDataProvided: "Data provided by Ergast F1 API",

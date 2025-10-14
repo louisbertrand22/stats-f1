@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { getAllDriverStats } from "../api";
 import Loader from "../components/Loader";
 import ErrorBanner from "../components/ErrorBanner";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTranslation } from "../translations";
 
 export default function PilotStats() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [data, setData] = useState([]);
   const [error, setError] = useState("");
   const [sortBy, setSortBy] = useState("wins");
@@ -14,12 +18,12 @@ export default function PilotStats() {
       try {
         setData(await getAllDriverStats());
       } catch (e) {
-        setError(e?.message || "Erreur");
+        setError(e?.message || t("error"));
       }
     })();
-  }, []);
+  }, [t]);
 
-  if (!data.length && !error) return <Loader text="Chargement des statistiques..." />;
+  if (!data.length && !error) return <Loader text={t("loadingStats")} />;
 
   // Sort data based on selected filter
   const getSortedData = () => {
@@ -65,26 +69,26 @@ export default function PilotStats() {
   return (
     <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
       <div className="px-6 py-4 bg-gray-700">
-        <h2 className="text-2xl font-bold mb-4">Statistiques des Pilotes</h2>
+        <h2 className="text-2xl font-bold mb-4">{t("pilotStats")}</h2>
         
         {/* Filter controls */}
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-300">Trier par:</label>
+            <label className="text-sm text-gray-300">{t("sortBy")}</label>
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
               className="px-3 py-2 rounded bg-gray-600 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              <option value="wins">Victoires</option>
-              <option value="poles">Pole Positions</option>
-              <option value="podiums">Podiums</option>
-              <option value="races">Courses</option>
+              <option value="wins">{t("wins")}</option>
+              <option value="poles">{t("poles")}</option>
+              <option value="podiums">{t("podiums")}</option>
+              <option value="races">{t("races")}</option>
             </select>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-300">Minimum:</label>
+            <label className="text-sm text-gray-300">{t("minimum")}</label>
             <input
               type="number"
               min="0"
@@ -99,7 +103,7 @@ export default function PilotStats() {
               onClick={() => setFilterMin(0)}
               className="px-3 py-2 text-sm rounded bg-red-600 hover:bg-red-700 text-white transition"
             >
-              Réinitialiser
+              {t("reset")}
             </button>
           )}
         </div>
@@ -111,22 +115,22 @@ export default function PilotStats() {
         <table className="w-full">
           <thead className="bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left">Pilote</th>
+              <th className="px-6 py-3 text-left">{t("driver")}</th>
               <th className="px-6 py-3 text-center cursor-pointer hover:bg-gray-600 transition"
                   onClick={() => setSortBy("wins")}>
-                Victoires {sortBy === "wins" && "⬇"}
+                {t("wins")} {sortBy === "wins" && "⬇"}
               </th>
               <th className="px-6 py-3 text-center cursor-pointer hover:bg-gray-600 transition"
                   onClick={() => setSortBy("poles")}>
-                Poles {sortBy === "poles" && "⬇"}
+                {t("poles")} {sortBy === "poles" && "⬇"}
               </th>
               <th className="px-6 py-3 text-center cursor-pointer hover:bg-gray-600 transition"
                   onClick={() => setSortBy("podiums")}>
-                Podiums {sortBy === "podiums" && "⬇"}
+                {t("podiums")} {sortBy === "podiums" && "⬇"}
               </th>
               <th className="px-6 py-3 text-center cursor-pointer hover:bg-gray-600 transition"
                   onClick={() => setSortBy("races")}>
-                Courses {sortBy === "races" && "⬇"}
+                {t("races")} {sortBy === "races" && "⬇"}
               </th>
             </tr>
           </thead>
@@ -156,7 +160,7 @@ export default function PilotStats() {
 
         {sortedData.length === 0 && !error && (
           <div className="px-6 py-8 text-center text-gray-400">
-            Aucun pilote ne correspond aux critères de filtrage.
+            {t("noDrivers")}
           </div>
         )}
       </div>

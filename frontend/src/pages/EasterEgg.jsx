@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTranslation } from "../translations";
 
 const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","m","a", "x"];
 export default function EasterEgg() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
@@ -20,15 +24,15 @@ export default function EasterEgg() {
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-xl p-6 text-center">
-      <h2 className="text-2xl font-bold mb-2">Easter Egg</h2>
-      <p className="text-gray-300 mb-6">Tape le <b>Max Code</b> sur ton clavier 🎮</p>
+      <h2 className="text-2xl font-bold mb-2">{t("easterEggTitle")}</h2>
+      <p className="text-gray-300 mb-6">{t("easterEggPrompt")} <b>{t("maxCode")}</b> {t("easterEggSuffix")}</p>
 
       <div className={`mx-auto w-48 h-48 rounded-full flex items-center justify-center text-5xl transition-all
         ${ok ? "bg-gradient-to-br from-red-500 to-yellow-400 animate-bounce" : "bg-gray-700"}`}>
         {ok ? "🏁" : "❓"}
       </div>
 
-      {ok && <p className="mt-6 text-red-300">Boost activé ! Vroum vroum 🏎️💨</p>}
+      {ok && <p className="mt-6 text-red-300">{t("boostActivated")}</p>}
     </div>
   );
 }

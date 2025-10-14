@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { getSchedule, getRaceResult } from "../api";
 import Loader from "../components/Loader";
 import ErrorBanner from "../components/ErrorBanner";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useTranslation } from "../translations";
 
 export default function Schedule() {
+  const { language } = useLanguage();
+  const t = useTranslation(language);
   const [data, setData] = useState([]);
   const [raceResults, setRaceResults] = useState({});
   const [error, setError] = useState("");
@@ -59,11 +63,11 @@ export default function Schedule() {
         }
         
         setRaceResults(results);
-      } catch (e) { setError(e?.message || "Erreur"); }
+      } catch (e) { setError(e?.message || t("error")); }
     })();
-  }, []);
+  }, [t]);
 
-  if (!data.length && !error) return <Loader text="Chargement du calendrier..." />;
+  if (!data.length && !error) return <Loader text={t("loadingSchedule")} />;
 
   const isPastRace = (raceDate) => {
     const today = new Date();
@@ -73,7 +77,7 @@ export default function Schedule() {
   return (
     <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
       <div className="px-6 py-4 bg-gray-700">
-        <h2 className="text-2xl font-bold">Calendrier de la saison</h2>
+        <h2 className="text-2xl font-bold">{t("scheduleTitle")}</h2>
       </div>
       <ErrorBanner message={error} />
       <ul className="divide-y divide-gray-700">
@@ -97,7 +101,7 @@ export default function Schedule() {
               
               {past && podium && (
                 <div className="mt-3 pt-3 border-t border-gray-700">
-                  <div className="text-sm font-semibold text-gray-300 mb-2">Podium</div>
+                  <div className="text-sm font-semibold text-gray-300 mb-2">{t("podium")}</div>
                   <div className="flex gap-4">
                     {podium.map((result, index) => {
                       const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";

@@ -41,22 +41,22 @@ export default function About() {
           <div className="bg-gray-700 rounded-lg p-4">
             <h4 className="font-semibold text-white mb-2">{t("backend")}</h4>
             <ul className="text-gray-300 space-y-1">
-              <li>• <span className="font-medium">FastAPI</span> — framework web moderne et performant</li>
-              <li>• <span className="font-medium">Uvicorn</span> — serveur ASGI pour FastAPI</li>
-              <li>• <span className="font-medium">Redis</span> — cache en mémoire (optionnel)</li>
-              <li>• <span className="font-medium">httpx</span> — client HTTP pour appeler l'API Ergast F1</li>
-              <li>• <span className="font-medium">Pydantic</span> — validation de données</li>
+              <li>• <span className="font-medium">FastAPI</span> — {t("fastapiDesc")}</li>
+              <li>• <span className="font-medium">Uvicorn</span> — {t("uvicornDesc")}</li>
+              <li>• <span className="font-medium">Redis</span> — {t("redisDesc")}</li>
+              <li>• <span className="font-medium">httpx</span> — {t("httpxDesc")}</li>
+              <li>• <span className="font-medium">Pydantic</span> — {t("pydanticDesc")}</li>
             </ul>
           </div>
           <div className="bg-gray-700 rounded-lg p-4">
             <h4 className="font-semibold text-white mb-2">{t("frontend")}</h4>
             <ul className="text-gray-300 space-y-1">
-              <li>• <span className="font-medium">React 18</span> — bibliothèque UI moderne</li>
-              <li>• <span className="font-medium">Vite</span> — outil de build ultra-rapide</li>
-              <li>• <span className="font-medium">React Router</span> — navigation entre pages</li>
-              <li>• <span className="font-medium">Axios</span> — client HTTP pour l'API</li>
-              <li>• <span className="font-medium">TailwindCSS</span> — framework CSS utility-first</li>
-              <li>• <span className="font-medium">Nginx</span> — serveur web pour les fichiers statiques</li>
+              <li>• <span className="font-medium">React 18</span> — {t("react18Desc")}</li>
+              <li>• <span className="font-medium">Vite</span> — {t("viteDesc")}</li>
+              <li>• <span className="font-medium">React Router</span> — {t("reactRouterDesc")}</li>
+              <li>• <span className="font-medium">Axios</span> — {t("axiosDesc")}</li>
+              <li>• <span className="font-medium">TailwindCSS</span> — {t("tailwindDesc")}</li>
+              <li>• <span className="font-medium">Nginx</span> — {t("nginxDesc")}</li>
             </ul>
           </div>
         </div>
@@ -67,12 +67,12 @@ export default function About() {
         <h3 className="text-xl font-bold mb-3 text-red-400">{t("devopsInfra")}</h3>
         <div className="bg-gray-700 rounded-lg p-4">
           <ul className="text-gray-300 space-y-1">
-            <li>• <span className="font-medium">Docker</span> — conteneurisation avec multi-stage builds</li>
-            <li>• <span className="font-medium">Docker Compose</span> — orchestration locale des services</li>
-            <li>• <span className="font-medium">GitHub Actions</span> — CI/CD (tests, lint, build, déploiement)</li>
-            <li>• <span className="font-medium">Trivy</span> — scan de sécurité des images Docker</li>
-            <li>• <span className="font-medium">GHCR</span> — GitHub Container Registry pour les images</li>
-            <li>• <span className="font-medium">Railway</span> — hébergement des services en production</li>
+            <li>• <span className="font-medium">Docker</span> — {t("dockerDesc")}</li>
+            <li>• <span className="font-medium">Docker Compose</span> — {t("dockerComposeDesc")}</li>
+            <li>• <span className="font-medium">GitHub Actions</span> — {t("githubActionsDesc")}</li>
+            <li>• <span className="font-medium">Trivy</span> — {t("trivyDesc")}</li>
+            <li>• <span className="font-medium">GHCR</span> — {t("ghcrDesc")}</li>
+            <li>• <span className="font-medium">Railway</span> — {t("railwayDesc")}</li>
           </ul>
         </div>
       </div>

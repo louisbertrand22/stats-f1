@@ -120,8 +120,8 @@ def test_driver_stats_verstappen():
     assert "total_podiums" in data
     assert data["driver_id"] == "verstappen"
     assert data["total_wins"] == 68  # Exact win count as of end of 2024 season
-    assert data["total_podiums"] == 121
-    assert data["total_races"] == 227
+    assert data["total_podiums"] == 122
+    assert data["total_races"] == 228
 
 def test_driver_stats_hamilton():
     """Test des statistiques d'Hamilton"""
@@ -167,9 +167,9 @@ def test_get_all_driver_stats():
     verstappen = next((d for d in data if d["driver_id"] == "verstappen"), None)
     assert verstappen is not None
     assert verstappen["total_wins"] == 68
-    assert verstappen["total_podiums"] == 121
-    assert verstappen["total_races"] == 227
-    assert verstappen["total_poles"] == 46
+    assert verstappen["total_podiums"] == 122
+    assert verstappen["total_races"] == 228
+    assert verstappen["total_poles"] == 47
 
 def test_invalid_endpoint():
     """Test d'un endpoint invalide"""

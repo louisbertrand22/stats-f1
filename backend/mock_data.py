@@ -86,23 +86,23 @@ _DRIVERS_BY_ID = {d["driverId"]: d for d in MOCK_DRIVERS}
 
 # (position, driverId, points, wins, podiums)
 _raw_driver_table = [
-    (1,  "piastri",    336, 7, 14),
-    (2,  "norris",     314, 5, 14),
-    (3,  "verstappen", 273, 4, 9),
-    (4,  "russell",    237, 2, 8),
-    (5,  "leclerc",    173, 0, 5),
-    (6,  "hamilton",   125, 0, 2),
-    (7,  "antonelli",   88, 0, 1),
-    (8,  "albon",       70, 0, 0),
-    (9,  "hadjar",      39, 0, 1),
-    (10, "hulkenberg",  37, 0, 1),
-    (11, "alonso",      36, 0, 0),
-    (12, "sainz_jr",    32, 0, 1),
+    (1,  "piastri",    346, 7, 14),
+    (2,  "norris",     332, 5, 15),
+    (3,  "verstappen", 306, 5, 10),
+    (4,  "russell",    252, 2, 8),
+    (5,  "leclerc",    192, 0, 6),
+    (6,  "hamilton",   142, 0, 0),
+    (7,  "antonelli",   89, 0, 1),
+    (8,  "albon",       73, 0, 0),
+    (9,  "hulkenberg",  41, 0, 1),
+    (10, "hadjar",      39, 0, 1),
+    (11, "sainz_jr",    37, 0, 1),
+    (12, "alonso",      38, 0, 0),
     (13, "stroll",      32, 0, 0),
     (14, "lawson",      30, 0, 0),
     (15, "ocon",        28, 0, 0),
-    (16, "gasly",       20, 0, 0),
-    (17, "tsunoda",     20, 0, 0),
+    (16, "tsunoda",     28, 0, 0),
+    (17, "gasly",       20, 0, 0),
     (18, "bortoleto",   18, 0, 0),
     (19, "bearman",     18, 0, 0),
     (20, "colapinto",    0, 0, 0),
@@ -730,6 +730,13 @@ MOCK_RACE_RESULTS = {
         "2025-10-05", "12:00:00Z",
         "russell", "verstappen", "norris"
     ),
+        ("2025", "19"): _create_race_result(
+            "2025", "19", "United States Grand Prix",
+            {"circuitId": "americas", "circuitName": "Circuit of the Americas",
+             "Location": {"lat": "30.1328", "long": "-97.6411", "locality": "Austin", "country": "USA"}},
+            "2025-10-19", "21:00:00Z",
+            "verstappen", "norris", "leclerc"
+        ),
 }
 
 def get_race_result(season: str, round_num: str):

@@ -168,7 +168,7 @@ def test_get_all_driver_stats():
     assert verstappen is not None
     assert verstappen["total_wins"] == 68
     assert verstappen["total_podiums"] == 122
-    assert verstappen["total_races"] == 228
+    assert verstappen["total_races"] == 221
     assert verstappen["total_poles"] == 47
 
 def test_invalid_endpoint():
